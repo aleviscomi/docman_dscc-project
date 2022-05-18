@@ -10,5 +10,6 @@ import java.util.List;
 public interface TagRepository extends JpaRepository<Tag, Integer> {
     boolean existsById(int id);
     Tag findById(int id);
+    List<Tag> findByProprietario(Utente proprietario);
     List<Tag> findAll();
 }

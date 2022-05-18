@@ -18,6 +18,10 @@ public class Tag {
     @Column(name = "nome", length = 45, nullable = false)
     private String nome;
 
+    @ManyToOne
+    @JoinColumn(name = "proprietario")
+    private Utente proprietario;
+
     @ManyToMany(mappedBy = "tags")
     @JsonIgnore
     private List<Documento> documenti;
