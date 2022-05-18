@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "documenti")
-public class Documenti {
+public class Documento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -35,12 +35,12 @@ public class Documenti {
 
     @ManyToOne
     @JoinColumn(name = "proprietario")
-    private Utenti proprietario;
+    private Utente proprietario;
 
     @ManyToMany
     @JoinTable(name = "associazioni_doc_tag", joinColumns = {@JoinColumn(name = "id_documento")}, inverseJoinColumns = {@JoinColumn(name = "id_tag")})
-    private List<Tags> tags;
+    private List<Tag> tags;
 
     @ManyToMany(mappedBy = "documentiCondivisi")
-    private List<Utenti> utenti;
+    private List<Utente> utenti;
 }

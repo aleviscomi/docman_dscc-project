@@ -1,5 +1,6 @@
 package it.ale.docman.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -8,7 +9,7 @@ import java.util.List;
 @Entity
 @Data
 @Table(name = "utenti")
-public class Utenti {
+public class Utente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -25,5 +26,6 @@ public class Utenti {
 
     @ManyToMany
     @JoinTable(name = "documenti_condivisi", joinColumns = {@JoinColumn(name = "id_utente")}, inverseJoinColumns = {@JoinColumn(name = "id_documento")})
-    private List<Documenti> documentiCondivisi;
+    @JsonIgnore
+    private List<Documento> documentiCondivisi;
 }
