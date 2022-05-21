@@ -80,6 +80,17 @@ public class DocumentoService {
     }
 
     @Transactional
+    public Documento ripristinaDocumento(int idDocumento) throws DocumentNotExistsException {
+        if(documentoRepository.existsById(idDocumento))
+            throw new DocumentNotExistsException();
+
+        Documento documento = documentoRepository.findById(idDocumento);
+        documento.setCestinoYN(false);
+
+        return documento;
+    }
+
+    @Transactional
     public Documento eliminaDefinitivamenteDocumento(int idDocumento) throws DocumentNotExistsException, DocumentNotDeletableException {
         if(documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
@@ -91,5 +102,61 @@ public class DocumentoService {
 
         documentoRepository.delete(documento);
         return documento;
+    }
+
+    @Transactional
+    public Documento condividiDocumento(int idDocumento, int idUtente) throws DocumentNotExistsException, UserNotExistsException, DocumentAlreadySharedException {
+        if(documentoRepository.existsById(idDocumento))
+            throw new DocumentNotExistsException();
+        if(!utenteRepository.existsById(idUtente))
+            throw new UserNotExistsException();
+
+        Documento documento = documentoRepository.findById(idDocumento);
+        Utente utente = utenteRepository.findById(idUtente);
+
+        List<Documento> documentiCondivisi = utente.getDocumentiCondivisi();
+
+        if(documentiCondivisi.contains(documento))
+            throw new DocumentAlreadySharedException();
+
+        documentiCondivisi.add(documento);
+
+        return documento;
+    }
+
+    @Transactional
+    public Documento rimuoviPermessi(int idDocumento, int idUtente) throws DocumentNotExistsException, UserNotExistsException {
+        if(documentoRepository.existsById(idDocumento))
+            throw new DocumentNotExistsException();
+        if(!utenteRepository.existsById(idUtente))
+            throw new UserNotExistsException();
+
+        Documento documento = documentoRepository.findById(idDocumento);
+        Utente utente = utenteRepository.findById(idUtente);
+
+        List<Documento> documentiCondivisi = utente.getDocumentiCondivisi();
+        documentiCondivisi.remove(documento);
+
+        return documento;
+    }
+
+    @Transactional
+    public List<Tag> tagsDocumento(int idDocumento) throws DocumentNotExistsException {
+        if(documentoRepository.existsById(idDocumento))
+            throw new DocumentNotExistsException();
+
+        Documento documento = documentoRepository.findById(idDocumento);
+
+        return documento.getTags();
+    }
+
+    @Transactional
+    public List<String> formatiPerProprietario(int idUtente) throws UserNotExistsException {
+        if(!utenteRepository.existsById(idUtente))
+            throw new UserNotExistsException();
+
+        Utente proprietario = utenteRepository.findById(idUtente);
+
+        return documentoRepository.findAllTypesByProprietario(proprietario);
     }
 }

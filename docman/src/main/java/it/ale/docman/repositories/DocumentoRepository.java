@@ -19,6 +19,6 @@ public interface DocumentoRepository extends JpaRepository<Documento, Integer> {
     List<Documento> findByData(LocalDateTime data);
     List<Documento> findByProprietarioAndCestinoYN(Utente proprietario, boolean cestino);
 
-    @Query("select distinct formato from Documento")
-    List<String> findAllTypes();
+    @Query("select distinct formato from Documento where proprietario = ?1")
+    List<String> findAllTypesByProprietario(Utente proprietario);
 }

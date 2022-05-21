@@ -1,5 +1,6 @@
 package it.ale.docman.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -37,10 +38,11 @@ public class Documento {
     @JoinColumn(name = "proprietario")
     private Utente proprietario;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "associazioni_doc_tag", joinColumns = {@JoinColumn(name = "id_documento")}, inverseJoinColumns = {@JoinColumn(name = "id_tag")})
     private List<Tag> tags;
 
     @ManyToMany(mappedBy = "documentiCondivisi")
+    @JsonIgnore
     private List<Utente> utenti;
 }

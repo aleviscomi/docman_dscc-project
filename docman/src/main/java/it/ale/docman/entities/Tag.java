@@ -20,6 +20,7 @@ public class Tag {
 
     @ManyToOne
     @JoinColumn(name = "proprietario")
+    @JsonIgnore
     private Utente proprietario;
 
     @ManyToMany(mappedBy = "tags")
