@@ -14,9 +14,9 @@ public interface DocumentoRepository extends JpaRepository<Documento, Integer> {
     boolean existsByPath(String path);
     boolean existsByTitolo(String titolo);
     Documento findById(int id);
-    List<Documento> findByProprietario(Utente proprietario);
-    List<Documento> findByFormato(String formato);
-    List<Documento> findByData(LocalDateTime data);
+    List<Documento> findByProprietarioAndTitoloContainingIgnoreCaseAndCestinoYN(Utente proprietario, String titolo, boolean cestino);
+    List<Documento> findByProprietarioAndFormatoAndCestinoYN(Utente proprietario, String formato, boolean cestino);
+    List<Documento> findByProprietarioAndTitoloContainingIgnoreCaseAndFormatoAndCestinoYN(Utente proprietario, String titolo, String formato, boolean cestino);
     List<Documento> findByProprietarioAndCestinoYN(Utente proprietario, boolean cestino);
 
     @Query("select distinct formato from Documento where proprietario = ?1")

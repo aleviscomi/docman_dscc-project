@@ -25,7 +25,7 @@ public class TagService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Tag> mostraPerProprietario(int idUtente) throws UserNotExistsException {
+    public List<Tag> mostraPerUtente(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
 

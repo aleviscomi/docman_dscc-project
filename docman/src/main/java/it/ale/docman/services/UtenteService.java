@@ -17,7 +17,7 @@ public class UtenteService {
     private UtenteRepository utenteRepository;
 
     @Transactional
-    public Utente registraUtente(Utente utente) throws MailUserAlreadyExistsException {
+    public Utente registra(Utente utente) throws MailUserAlreadyExistsException {
         if(utenteRepository.existsByEmail(utente.getEmail()))
             throw new MailUserAlreadyExistsException();
 
@@ -25,7 +25,7 @@ public class UtenteService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Utente> mostraTuttiTranne(int idUtente) throws UserNotExistsException {
+    public List<Utente> mostraTuttiEscluso(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
 
@@ -37,7 +37,7 @@ public class UtenteService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public Utente getById(int idUtente) throws UserNotExistsException {
+    public Utente trovaPerId(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
         return utenteRepository.findById(idUtente);

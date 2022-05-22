@@ -2,6 +2,7 @@ package it.ale.docman.services;
 
 import it.ale.docman.entities.*;
 import it.ale.docman.repositories.DocumentoRepository;
+import it.ale.docman.repositories.TagRepository;
 import it.ale.docman.repositories.UtenteRepository;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +23,11 @@ public class DocumentoService {
     @Autowired
     private UtenteRepository utenteRepository;
 
+    @Autowired
+    private TagRepository tagRepository;
+
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Documento> mostraMieiDocumenti(int idUtente) throws UserNotExistsException {
+    public List<Documento> mostraPerUtente(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente)) throw new UserNotExistsException();
 
         Utente proprietario = utenteRepository.findById(idUtente);
@@ -29,7 +35,7 @@ public class DocumentoService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Documento> mostraDocumentiCondivisiConMe(int idUtente) throws UserNotExistsException {
+    public List<Documento> mostraCondivisiConMe(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente)) throw new UserNotExistsException();
 
         Utente proprietario = utenteRepository.findById(idUtente);
@@ -43,7 +49,7 @@ public class DocumentoService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Documento> mostraDocumentiCestinati(int idUtente) throws UserNotExistsException {
+    public List<Documento> mostraCestinati(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente)) throw new UserNotExistsException();
 
         Utente proprietario = utenteRepository.findById(idUtente);
@@ -51,13 +57,65 @@ public class DocumentoService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Documento> filtraDocumentiPerNomeAndFormatoAndTagAndData() {
-        // TODO
-        return null;
+    public List<Documento> filtra(int idUtente, String titolo, String formato, int idTag) throws UserNotExistsException, TagNotExistsException {
+        if(!utenteRepository.existsById(idUtente))
+            throw new UserNotExistsException();
+        if(idTag != 0 && !tagRepository.existsById(idTag))
+            throw new TagNotExistsException();
+
+        Utente utente = utenteRepository.findById(idUtente);
+        Tag tag = tagRepository.findById(idTag);
+
+        //filtra solo per titolo documento
+        if(titolo != null && formato == null && tag == null)
+            return documentoRepository.findByProprietarioAndTitoloContainingIgnoreCaseAndCestinoYN(utente, titolo, false);
+
+        //filtra solo per formato
+        if(titolo == null && formato != null && tag == null)
+            return documentoRepository.findByProprietarioAndFormatoAndCestinoYN(utente, formato, false);
+
+        //filtra solo per tag
+        if(titolo == null && formato == null && tag != null) {
+            return tag.getDocumenti();
+        }
+
+        //filtra per titolo e formato
+        if(titolo != null && formato != null && tag == null)
+            return documentoRepository.findByProprietarioAndTitoloContainingIgnoreCaseAndFormatoAndCestinoYN(utente, titolo, formato, false);
+
+        //filtra per titolo e tag
+        if(titolo != null && formato == null && tag != null) {
+            List<Documento> risultato = new ArrayList<>();
+            for(Documento d : documentoRepository.findByProprietarioAndTitoloContainingIgnoreCaseAndCestinoYN(utente, titolo, false))
+                if(d.getTags().contains(tag))
+                    risultato.add(d);
+            return risultato;
+        }
+
+        //filtra per formato e tag
+        if(titolo == null && formato != null && tag != null) {
+            List<Documento> risultato = new ArrayList<>();
+            for(Documento d : documentoRepository.findByProprietarioAndFormatoAndCestinoYN(utente, formato, false))
+                if(d.getTags().contains(tag))
+                    risultato.add(d);
+            return risultato;
+        }
+
+
+        //filtra per tutto
+        if(titolo != null && formato != null && tag != null) {
+            List<Documento> risultato = new ArrayList<>();
+            for (Documento d : documentoRepository.findByProprietarioAndTitoloContainingIgnoreCaseAndFormatoAndCestinoYN(utente, titolo, formato, false))
+                if (d.getTags().contains(tag))
+                    risultato.add(d);
+            return risultato;
+        }
+
+        return mostraPerUtente(idUtente);
     }
 
     @Transactional
-    public Documento caricaDocumento(Documento documento) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentPathAlreadyExistsException{
+    public Documento carica(Documento documento) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentPathAlreadyExistsException{
         if(!utenteRepository.existsById(documento.getProprietario().getId()))
             throw new UserNotExistsException();
         if(documentoRepository.existsByPath(documento.getPath()))
@@ -69,8 +127,8 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento eliminaDocumento(int idDocumento) throws DocumentNotExistsException {
-        if(documentoRepository.existsById(idDocumento))
+    public Documento elimina(int idDocumento) throws DocumentNotExistsException {
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
@@ -80,8 +138,8 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento ripristinaDocumento(int idDocumento) throws DocumentNotExistsException {
-        if(documentoRepository.existsById(idDocumento))
+    public Documento ripristina(int idDocumento) throws DocumentNotExistsException {
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
@@ -91,8 +149,8 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento eliminaDefinitivamenteDocumento(int idDocumento) throws DocumentNotExistsException, DocumentNotDeletableException {
-        if(documentoRepository.existsById(idDocumento))
+    public Documento eliminaDefinitivamente(int idDocumento) throws DocumentNotExistsException, DocumentNotDeletableException {
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
@@ -105,8 +163,8 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento condividiDocumento(int idDocumento, int idUtente) throws DocumentNotExistsException, UserNotExistsException, DocumentAlreadySharedException {
-        if(documentoRepository.existsById(idDocumento))
+    public Documento condividi(int idDocumento, int idUtente) throws DocumentNotExistsException, UserNotExistsException, DocumentAlreadySharedException {
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
@@ -126,7 +184,7 @@ public class DocumentoService {
 
     @Transactional
     public Documento rimuoviPermessi(int idDocumento, int idUtente) throws DocumentNotExistsException, UserNotExistsException {
-        if(documentoRepository.existsById(idDocumento))
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
@@ -141,8 +199,8 @@ public class DocumentoService {
     }
 
     @Transactional
-    public List<Tag> tagsDocumento(int idDocumento) throws DocumentNotExistsException {
-        if(documentoRepository.existsById(idDocumento))
+    public List<Tag> mostraTags(int idDocumento) throws DocumentNotExistsException {
+        if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
