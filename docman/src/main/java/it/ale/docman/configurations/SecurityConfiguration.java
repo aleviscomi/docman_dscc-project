@@ -22,16 +22,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers("/documents/**").permitAll()
-                .antMatchers("/tag/**").permitAll()
-                .anyRequest().authenticated();
+                //.antMatchers("/documenti/**").permitAll()
+                //.antMatchers("/tags/**").permitAll()
+                .antMatchers("/utenti/**").permitAll()
+                .anyRequest().authenticated().and().oauth2ResourceServer().jwt().jwtAuthenticationConverter(authenticationConverter());
     }
-/*
+
     @Bean
     public Converter<Jwt, AbstractAuthenticationToken> authenticationConverter() {
         return new JwtAuthenticationConverter();
     }
-*/
+
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

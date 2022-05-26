@@ -1,47 +1,56 @@
 package it.ale.docman.controllers;
 
 import it.ale.docman.entities.Documento;
+import it.ale.docman.entities.Tag;
+import it.ale.docman.entities.Utente;
 import it.ale.docman.services.DocumentoService;
-import it.ale.docman.services.TagService;
+import it.ale.docman.services.UtenteService;
+import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
-@RequestMapping("/documents")
+@RequestMapping("/documenti")
+@PreAuthorize("hasAuthority('utente')")
 public class DocumentoController {
     @Autowired
     private DocumentoService documentoService;
 
     @Autowired
-    private TagService tagService;
+    private UtenteService utenteService;
 
     @GetMapping("/miei")
-    public ResponseEntity mostraMieiDocumenti(@RequestParam("id") int idUtente) {
+    public ResponseEntity mostraMieiDocumenti() {
+        Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
         try {
-            return new ResponseEntity(documentoService.mostraPerUtente(idUtente), HttpStatus.OK);
+            return new ResponseEntity(documentoService.mostraPerUtente(proprietario), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/condivisiconme")
-    public ResponseEntity mostraDocumentiCondivisiConMe(@RequestParam("id") int idUtente) {
+    public ResponseEntity mostraDocumentiCondivisiConMe() {
         try {
-            return new ResponseEntity(documentoService.mostraCondivisiConMe(idUtente), HttpStatus.OK);
+            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
+            return new ResponseEntity(documentoService.mostraCondivisiConMe(proprietario), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/cestino")
-    public ResponseEntity mostraDocumentiCestinati(@RequestParam("id") int idUtente) {
+    public ResponseEntity mostraDocumentiCestinati() {
         try {
-            return new ResponseEntity(documentoService.mostraCestinati(idUtente), HttpStatus.OK);
+            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
+            return new ResponseEntity(documentoService.mostraCestinati(proprietario), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         }
@@ -50,6 +59,8 @@ public class DocumentoController {
     @PostMapping("/carica")
     public ResponseEntity caricaDocumento(@RequestBody @Valid Documento documento) {
         try {
+            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
+            documento.setProprietario(proprietario);
             return new ResponseEntity(documentoService.carica(documento), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
@@ -66,15 +77,19 @@ public class DocumentoController {
             return new ResponseEntity(documentoService.elimina(idDocumento), HttpStatus.OK);
         } catch (DocumentNotExistsException e) {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @GetMapping("/ripristina")
+    @PutMapping("/ripristina")
     public ResponseEntity ripristinaDocumento(@RequestParam("id") int idDocumento) {
         try {
             return new ResponseEntity(documentoService.ripristina(idDocumento), HttpStatus.OK);
         } catch (DocumentNotExistsException e) {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -86,6 +101,8 @@ public class DocumentoController {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentNotDeletableException e) {
             return new ResponseEntity("Documento non eliminabile!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -99,10 +116,14 @@ public class DocumentoController {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentAlreadySharedException e) {
             return new ResponseEntity("Questo documento è già condiviso con l'utente specificato!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentAlreadyOwnedException e) {
+            return new ResponseEntity("Questo documento è già di tua proprietà! Non puoi condividere il documento con te stesso!", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PostMapping("/rimuoviaccesso")
+    @DeleteMapping("/rimuoviaccesso")
     public ResponseEntity rimuoviAccessoDocumento(@RequestParam("id_doc") int idDocumento, @RequestParam("id_utente") int idUtente) {
         try {
             return new ResponseEntity(documentoService.rimuoviPermessi(idDocumento, idUtente), HttpStatus.OK);
@@ -110,6 +131,8 @@ public class DocumentoController {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -119,41 +142,52 @@ public class DocumentoController {
             return new ResponseEntity(documentoService.mostraTags(idDocumento), HttpStatus.OK);
         } catch (DocumentNotExistsException e) {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
-        } catch (UserNotExistsException e) {
-            return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @GetMapping("/tagsUtente")
-    public ResponseEntity mostraTagsPerUtente(@RequestParam("id") int idUtente) {
-        try {
-            return new ResponseEntity(tagService.mostraPerUtente(idUtente), HttpStatus.OK);
-        } catch (DocumentNotExistsException e) {
-            return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
-        } catch (UserNotExistsException e) {
-            return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/formato")
-    public ResponseEntity mostraFormatiDocumentoPerProprietario(@RequestParam("id_utente") int idUtente) {
+    public ResponseEntity mostraFormatiPerProprietario() {
         try {
-            return new ResponseEntity(documentoService.formatiPerProprietario(idUtente), HttpStatus.OK);
-        } catch (DocumentNotExistsException e) {
-            return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
+            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
+            return new ResponseEntity(documentoService.formatiPerProprietario(proprietario), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         }
     }
 
     @GetMapping("/filtra")
-    public ResponseEntity filtraDocumenti(@RequestParam("id_utente") int idUtente, @RequestParam(value = "titolo", required = false) String titolo, @RequestParam(value = "formato", required = false) String formato, @RequestParam(value = "id_tag", defaultValue = "0") int idTag) {
+    public ResponseEntity filtraDocumenti(@RequestParam(value = "titolo", required = false) String titolo, @RequestParam(value = "formato", required = false) String formato, @RequestParam(value = "tag", defaultValue = "0") int idTag) {
         try {
-            return new ResponseEntity(documentoService.filtra(idUtente, titolo, formato, idTag), HttpStatus.OK);
+            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
+            return new ResponseEntity(documentoService.filtra(proprietario, titolo, formato, idTag), HttpStatus.OK);
         } catch (TagNotExistsException e) {
             return new ResponseEntity("Tag inesistente!", HttpStatus.BAD_REQUEST);
-        } catch (UserNotExistsException e) {
-            return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/aggiungitags")
+    public ResponseEntity aggiungiTagsDocumento(@RequestBody @Valid List<Tag> tags, @RequestParam("doc") int idDocumento) {
+        try {
+            return new ResponseEntity(documentoService.aggiungiTags(tags, idDocumento), HttpStatus.OK);
+        } catch (DocumentNotExistsException e) {
+            return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (TagNotExistsException e) {
+            return new ResponseEntity("Stai usando dei tag inesistenti!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/rimuovitag")
+    public ResponseEntity rimuoviTagDocumento(@RequestParam("tag") int idTag, @RequestParam("doc") int idDocumento) {
+        try {
+            return new ResponseEntity(documentoService.rimuoviTag(idTag, idDocumento), HttpStatus.OK);
+        } catch (DocumentNotExistsException e) {
+            return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (TagNotExistsException e) {
+            return new ResponseEntity("Tag inesistente!", HttpStatus.BAD_REQUEST);
+        } catch (DocumentNotOwnedException e) {
+            return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 }

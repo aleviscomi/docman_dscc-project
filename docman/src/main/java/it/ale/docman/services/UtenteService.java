@@ -24,6 +24,22 @@ public class UtenteService {
         return utenteRepository.save(utente);
     }
 
+    @Transactional
+    public Utente modificaUtente(Utente utente) throws UserNotExistsException, MailUserAlreadyExistsException {
+        if(!utenteRepository.existsById(utente.getId()))
+            throw new UserNotExistsException();
+        Utente checkEmail = utenteRepository.findByEmail(utente.getEmail());
+        if(checkEmail != null && checkEmail.getId() != utente.getId())
+            throw new MailUserAlreadyExistsException();
+
+        Utente old = utenteRepository.findById(utente.getId());
+        old.setNome(utente.getNome());
+        old.setCognome(utente.getCognome());
+        old.setEmail(utente.getEmail());
+
+        return old;
+    }
+
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public List<Utente> mostraTuttiEscluso(int idUtente) throws UserNotExistsException {
         if(!utenteRepository.existsById(idUtente))
@@ -41,5 +57,12 @@ public class UtenteService {
         if(!utenteRepository.existsById(idUtente))
             throw new UserNotExistsException();
         return utenteRepository.findById(idUtente);
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+    public Utente trovaPerEmail(String email) throws UserNotExistsException {
+        if(!utenteRepository.existsByEmail(email))
+            throw new UserNotExistsException();
+        return utenteRepository.findByEmail(email);
     }
 }

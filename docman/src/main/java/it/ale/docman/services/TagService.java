@@ -25,11 +25,10 @@ public class TagService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Tag> mostraPerUtente(int idUtente) throws UserNotExistsException {
-        if(!utenteRepository.existsById(idUtente))
+    public List<Tag> mostraPerProprietario(Utente proprietario) throws UserNotExistsException {
+        if(!utenteRepository.existsById(proprietario.getId()))
             throw new UserNotExistsException();
 
-        Utente proprietario = utenteRepository.findById(idUtente);
         return tagRepository.findByProprietario(proprietario);
     }
 }

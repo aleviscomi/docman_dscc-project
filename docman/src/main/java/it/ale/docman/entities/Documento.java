@@ -32,7 +32,7 @@ public class Documento {
     private String descrizione;
 
     @Column(name = "cestinoYN", nullable = false)
-    private boolean cestinoYN;
+    private boolean cestino;
 
     @ManyToOne
     @JoinColumn(name = "proprietario")
