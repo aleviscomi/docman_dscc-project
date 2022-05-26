@@ -18,8 +18,8 @@ public class UtenteController {
     @Autowired
     private UtenteService utenteService;
 
-    @PostMapping
-    public ResponseEntity register(@RequestBody @Valid Utente utente) {
+    @PostMapping("/registra")
+    public ResponseEntity registraUtente(@RequestBody @Valid Utente utente) {
         try{
             return new ResponseEntity(utenteService.registra(utente), HttpStatus.OK);
         } catch (MailUserAlreadyExistsException e) {
@@ -27,9 +27,9 @@ public class UtenteController {
         }
     }
 
-    @PutMapping("/modify")
-    @PreAuthorize("hasAuthority('client')")
-    public ResponseEntity modify(@RequestBody @Valid Utente utente) {
+    @PutMapping("/modifica")
+    @PreAuthorize("hasAuthority('utente')")
+    public ResponseEntity modificaUtente(@RequestBody @Valid Utente utente) {
         try{
             return new ResponseEntity(utenteService.modificaUtente(utente), HttpStatus.OK);
         } catch (UserNotExistsException e) {

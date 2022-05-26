@@ -24,7 +24,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 //.antMatchers("/documenti/**").permitAll()
                 //.antMatchers("/tags/**").permitAll()
-                .antMatchers("/utenti/**").permitAll()
+                .antMatchers("/utenti/registra").permitAll()
                 .anyRequest().authenticated().and().oauth2ResourceServer().jwt().jwtAuthenticationConverter(authenticationConverter());
     }
 
