@@ -66,7 +66,7 @@ public class DocumentoController {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentTitleAlreadyExistsException e) {
             return new ResponseEntity("Titolo già esistente!", HttpStatus.BAD_REQUEST);
-        } catch (DocumentPathAlreadyExistsException e) {
+        } catch (DocumentUrlAlreadyExistsException e) {
             return new ResponseEntity("Path già esistente!", HttpStatus.BAD_REQUEST);
         }
     }

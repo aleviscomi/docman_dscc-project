@@ -10,13 +10,13 @@ import java.util.List;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, Integer> {
     boolean existsById(int id);
-    boolean existsByPath(String path);
+    boolean existsByUrl(String url);
     boolean existsByTitolo(String titolo);
     Documento findById(int id);
     List<Documento> findByProprietarioAndTitoloContainingIgnoreCaseAndCestino(Utente proprietario, String titolo, boolean cestino);
     List<Documento> findByProprietarioAndFormatoAndCestino(Utente proprietario, String formato, boolean cestino);
     List<Documento> findByProprietarioAndTitoloContainingIgnoreCaseAndFormatoAndCestino(Utente proprietario, String titolo, String formato, boolean cestino);
-    List<Documento> findByProprietarioAndCestino(Utente proprietario, boolean cestino);
+    List<Documento> findByProprietarioAndCestinoOrderByDataDesc(Utente proprietario, boolean cestino);
 
     @Query("select distinct formato from Documento where proprietario = ?1")
     List<String> findAllTypesByProprietario(Utente proprietario);

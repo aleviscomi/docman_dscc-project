@@ -16,8 +16,8 @@ public class Documento {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "path", length = 750, nullable = false)
-    private String path;
+    @Column(name = "url", length = 750, nullable = false)
+    private String url;
 
     @Column(name = "titolo", length = 100, nullable = false)
     private String titolo;
@@ -30,6 +30,12 @@ public class Documento {
 
     @Column(name = "descrizione", length = 250, nullable = false)
     private String descrizione;
+
+    @Column(name = "dimensione", nullable = false)
+    private int dimensione;
+
+    @Column(name = "unita_dimensione", length = 2, nullable = false)
+    private String unita_dimensione;
 
     @Column(name = "cestinoYN", nullable = false)
     private boolean cestino;

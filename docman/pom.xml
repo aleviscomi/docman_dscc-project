@@ -10,7 +10,7 @@
     </parent>
     <groupId>it.ale</groupId>
     <artifactId>docman</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>Back-end for a document manager</version>
     <name>docman</name>
     <description>docman</description>
     <properties>

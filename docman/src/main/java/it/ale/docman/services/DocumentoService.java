@@ -29,7 +29,7 @@ public class DocumentoService {
     public List<Documento> mostraPerUtente(Utente proprietario) throws UserNotExistsException {
         if(!utenteRepository.existsById(proprietario.getId())) throw new UserNotExistsException();
 
-        return documentoRepository.findByProprietarioAndCestino(proprietario, false);
+        return documentoRepository.findByProprietarioAndCestinoOrderByDataDesc(proprietario, false);
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
@@ -48,7 +48,7 @@ public class DocumentoService {
     public List<Documento> mostraCestinati(Utente proprietario) throws UserNotExistsException {
         if(!utenteRepository.existsById(proprietario.getId())) throw new UserNotExistsException();
 
-        return documentoRepository.findByProprietarioAndCestino(proprietario, true);
+        return documentoRepository.findByProprietarioAndCestinoOrderByDataDesc(proprietario, true);
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
@@ -107,11 +107,11 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento carica(Documento documento) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentPathAlreadyExistsException{
+    public Documento carica(Documento documento) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentUrlAlreadyExistsException {
         if(!utenteRepository.existsById(documento.getProprietario().getId()))
             throw new UserNotExistsException();
-        if(documentoRepository.existsByPath(documento.getPath()))
-            throw new DocumentPathAlreadyExistsException();
+        if(documentoRepository.existsByUrl(documento.getUrl()))
+            throw new DocumentUrlAlreadyExistsException();
         if(documentoRepository.existsByTitolo(documento.getTitolo()))
             throw new DocumentTitleAlreadyExistsException();
 
