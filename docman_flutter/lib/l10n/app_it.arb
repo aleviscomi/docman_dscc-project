@@ -1,0 +1,23 @@
+{
+    "login": "Accedi",
+    "signup": "Registrati",
+    "email": "E-Mail",
+    "password": "Password",
+    "logout": "Esci",
+    "settings": "Impostazioni",
+    "loginString": "Accedi al tuo account!",
+    "wrongCredentials": "Credenziali errate!!!",
+
+
+    "mydocs": "Miei Documenti",
+    "shareddocs": "Condivisi con me",
+    "trash": "Cestino",
+    "search": "Cerca...",
+    "docsof": "Documenti di",
+    "name": "Nome",
+    "date": "Data di caricamento",
+    "actions": "Azioni",
+    "file_size": "Dimensioni file",
+    "share": "Condividi",
+    "delete": "Elimina"
+}

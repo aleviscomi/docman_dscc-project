@@ -1,0 +1,23 @@
+{
+    "login": "Log In",
+    "signup": "Sign Up",
+    "email": "E-Mail",
+    "password": "Password",
+    "logout": "Log Out",
+    "settings": "Settings",
+    "loginString": "Log in to your account!",
+    "wrongCredentials": "Wrong Credentials!!!",
+
+
+    "mydocs": "My Documents",
+    "shareddocs": "Shared with me",
+    "trash": "Bin",
+    "search": "Search...",
+    "docsof": "Documents of",
+    "name": "Name",
+    "date": "Upload Date",
+    "actions": "Actions",
+    "file_size": "File size",
+    "share": "Share",
+    "delete": "Delete"
+}
