@@ -26,4 +26,14 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     @JsonIgnore
     private List<Documento> documenti;
+
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Tag)) return false;
+        if(this == obj) return true;
+
+        Tag t = (Tag) obj;
+        if(t.getId() == this.getId())
+            return true;
+        return false;
+    }
 }

@@ -1,9 +1,12 @@
+import 'package:docman_flutter/model/Model.dart';
 import 'package:docman_flutter/model/objects/Documento.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:fluttericon/font_awesome_icons.dart';
 import 'package:intl/intl.dart';
+
+import 'SharingCenter.dart';
 
 class DataSource extends DataTableSource {
   List<Documento> docs;
@@ -12,12 +15,17 @@ class DataSource extends DataTableSource {
     _rows = <_Row>[
       for(Documento d in docs)
         _Row(
+          d,
+          d.id,
           Row(children: [
             Padding(
               padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-              child: setRightIcon(d.formato),
+              child: setIcon(d.formato),
             ),
-            Text("${d.titolo}.${d.formato}")
+            Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width / 2),
+              child: d.formato == "" ? Text(d.titolo, overflow: TextOverflow.ellipsis,) : Text("${d.titolo}.${d.formato}", overflow: TextOverflow.ellipsis,)
+            ),
           ]),
           DateFormat('dd-MM-yyyy  HH:mm').format(d.data),
           "${d.dimensione.toString()} ${d.unitaDimensione}"
@@ -38,9 +46,9 @@ class DataSource extends DataTableSource {
       index: index,
       selected: row.selected,
       cells: [
-        DataCell(row.valueA),
-        DataCell(Center(child: Text(row.valueB))),
-        DataCell(Center(child: Text(row.valueC))),
+        DataCell(row.nome),
+        DataCell(Center(child: Text(row.data))),
+        DataCell(Center(child: Text(row.dimensione))),
         DataCell(
           Center(
             child: PopupMenuButton(
@@ -49,14 +57,30 @@ class DataSource extends DataTableSource {
               offset: const Offset(0, 20),
               onSelected: (result) {
                 switch(result) {
-                  case 0: print("Info"); break;
-                  case 1: print(AppLocalizations.of(context).share); break;
-                  case 2: print(AppLocalizations.of(context).delete); break;
+                  case 0: print(AppLocalizations.of(context).download); break;
+                  case 1: print("Info"); break;
+                  case 2: {
+                    _openSharingCenter(row.documento);
+                    break;
+                  }
+                  case 3: {
+                    _deleteDoc(row.id);
+                    break;
+                  }
                 }
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
                     value: 0,
+                    child: Row(
+                      children: [
+                        Icon(Icons.download_outlined, color: Colors.black,),
+                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).download),)
+                      ],
+                    )
+                ),
+                PopupMenuItem(
+                    value: 1,
                     child: Row(
                       children: const [
                         Icon(Icons.info_outline_rounded, color: Colors.black,),
@@ -65,16 +89,16 @@ class DataSource extends DataTableSource {
                     )
                 ),
                 PopupMenuItem(
-                    value: 1,
+                    value: 2,
                     child: Row(
                       children: [
-                        const Icon(Icons.people_alt_outlined, color: Colors.black,),
+                        const Icon(Icons.person_add_alt, color: Colors.black,),
                         Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).share),)
                       ],
                     )
                 ),
                 PopupMenuItem(
-                    value: 2,
+                    value: 3,
                     child: Row(
                       children: [
                         const Icon(Icons.delete_outline_outlined, color: Colors.black,),
@@ -99,7 +123,17 @@ class DataSource extends DataTableSource {
   @override
   int get selectedRowCount => _selectedCount;
 
-  Icon setRightIcon(String formato) {
+  void _deleteDoc(int id) {
+    Model.sharedInstance.deleteDocument(id).then((result) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.pushNamed(context, '/');
+    });
+  }
+  void _openSharingCenter(Documento documento) {
+    showDialog(context: context, builder: (context) => SharingCenter(documento));
+  }
+
+  Icon setIcon(String formato) {
     switch(formato) {
       case "pdf": return const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFDE0000),);
       case "docx": return const Icon(FontAwesome5.file_word, color: Color(0xFF1868C7),);
@@ -135,11 +169,13 @@ class DataSource extends DataTableSource {
 }
 
 class _Row {
-  final Row valueA;
-  final String valueB;
-  final String valueC;
+  final Documento documento;
+  final int id;
+  final Row nome;
+  final String data;
+  final String dimensione;
 
-  _Row( this.valueA, this.valueB, this.valueC,);
+  _Row(this.documento, this.id, this.nome, this.data, this.dimensione,);
 
   bool selected = false;
 }

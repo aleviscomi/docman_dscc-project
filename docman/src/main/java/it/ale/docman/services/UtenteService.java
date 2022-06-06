@@ -1,7 +1,11 @@
 package it.ale.docman.services;
 
+import it.ale.docman.entities.Documento;
 import it.ale.docman.entities.Utente;
+import it.ale.docman.repositories.DocumentoRepository;
 import it.ale.docman.repositories.UtenteRepository;
+import it.ale.docman.supports.authentication.Utils;
+import it.ale.docman.supports.exceptions.DocumentNotExistsException;
 import it.ale.docman.supports.exceptions.MailUserAlreadyExistsException;
 import it.ale.docman.supports.exceptions.UserNotExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +19,9 @@ import java.util.List;
 public class UtenteService {
     @Autowired
     private UtenteRepository utenteRepository;
+
+    @Autowired
+    private DocumentoRepository documentoRepository;
 
     @Transactional
     public Utente registra(Utente utente) throws MailUserAlreadyExistsException {
@@ -41,15 +48,30 @@ public class UtenteService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public List<Utente> mostraTuttiEscluso(int idUtente) throws UserNotExistsException {
-        if(!utenteRepository.existsById(idUtente))
-            throw new UserNotExistsException();
+    public List<Utente> mostraUtentiCondivisione(int idDoc) throws DocumentNotExistsException {
+        if(!documentoRepository.existsById(idDoc))
+            throw new DocumentNotExistsException();
 
-        Utente utente = utenteRepository.findById(idUtente);
+        Documento documento = documentoRepository.findById(idDoc);
+        List<Utente> inCondivisione = documento.getUtenti();
+        Utente utenteLoggato = utenteRepository.findByEmail(Utils.getEmail());
+
         List<Utente> risultato = utenteRepository.findAll();
-        risultato.remove(utente);
+        risultato.remove(utenteLoggato);
+        for(Utente u : inCondivisione)
+            risultato.remove(u);
 
         return risultato;
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+    public List<Utente> mostraUtentiGiaCondivisi(int idDoc) throws DocumentNotExistsException {
+        if(!documentoRepository.existsById(idDoc))
+            throw new DocumentNotExistsException();
+
+        Documento documento = documentoRepository.findById(idDoc);
+
+        return documento.getUtenti();
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)

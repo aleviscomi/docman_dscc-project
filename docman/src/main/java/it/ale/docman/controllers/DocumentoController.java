@@ -9,11 +9,17 @@ import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileStore;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -56,18 +62,18 @@ public class DocumentoController {
         }
     }
 
-    @PostMapping("/carica")
-    public ResponseEntity caricaDocumento(@RequestBody @Valid Documento documento) {
+    @PostMapping(path = "/carica", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity caricaDocumento(@RequestParam String titolo, @RequestParam String descrizione, @RequestParam MultipartFile file) {
         try {
-            Utente proprietario = utenteService.trovaPerEmail(Utils.getEmail());
-            documento.setProprietario(proprietario);
-            return new ResponseEntity(documentoService.carica(documento), HttpStatus.OK);
+            return new ResponseEntity(documentoService.carica(titolo, descrizione, file), HttpStatus.OK);
         } catch (UserNotExistsException e) {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentTitleAlreadyExistsException e) {
             return new ResponseEntity("Titolo già esistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentUrlAlreadyExistsException e) {
-            return new ResponseEntity("Path già esistente!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity("Url già esistente!", HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            return new ResponseEntity("Errore sconosciuto!", HttpStatus.BAD_REQUEST);
         }
     }
 

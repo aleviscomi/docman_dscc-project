@@ -1,3 +1,6 @@
+import 'Tag.dart';
+import 'Utente.dart';
+
 class Documento{
   int id;
   String url;
@@ -8,8 +11,10 @@ class Documento{
   int dimensione;
   String unitaDimensione;
   bool cestino;
+  Utente proprietario;
+  List<Tag> tags;
 
-  Documento({this.id, this.url, this.titolo, this.formato, this.data, this.descrizione, this.dimensione, this.unitaDimensione, this.cestino});
+  Documento({this.id, this.url, this.titolo, this.formato, this.data, this.descrizione, this.dimensione, this.unitaDimensione, this.cestino, this.proprietario, this.tags});
 
   factory Documento.fromJson(Map<String, dynamic> json) {
     return Documento(
@@ -22,6 +27,8 @@ class Documento{
       dimensione: json['dimensione'],
       unitaDimensione: json['unita_dimensione'],
       cestino: json['cestino'],
+      proprietario: Utente.fromJson(json['proprietario']),
+      tags: List<Tag>.from(json['tags'].map((i) => Tag.fromJson(i)).toList()),
     );
   }
 
@@ -35,5 +42,7 @@ class Documento{
     'dimensione': dimensione,
     'unita_dimensione': unitaDimensione,
     'cestino': cestino,
+    'proprietario': proprietario,
+    'tags': tags,
   };
 }

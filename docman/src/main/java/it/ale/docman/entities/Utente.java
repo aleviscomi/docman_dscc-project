@@ -28,4 +28,14 @@ public class Utente {
     @JoinTable(name = "documenti_condivisi", joinColumns = {@JoinColumn(name = "id_utente")}, inverseJoinColumns = {@JoinColumn(name = "id_documento")})
     @JsonIgnore
     private List<Documento> documentiCondivisi;
+
+    public boolean equals(Object obj) {
+        if(!(obj instanceof Utente)) return false;
+        if(this == obj) return true;
+
+        Utente u = (Utente) obj;
+        if(u.getId() == this.getId())
+            return true;
+        return false;
+    }
 }

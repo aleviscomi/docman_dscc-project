@@ -1,11 +1,18 @@
+import 'package:docman_flutter/UI/customWidgets/FilterChipDisplay.dart';
 import 'package:docman_flutter/UI/customWidgets/InputField.dart';
 import 'package:docman_flutter/model/objects/Documento.dart';
 import 'package:docman_flutter/supports/Constants.dart';
+import 'package:filter_list/filter_list.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:fluttericon/font_awesome5_icons.dart';
+import 'package:fluttericon/font_awesome_icons.dart';
 
 import '../../model/Model.dart';
+import '../../model/objects/Tag.dart';
 import '../customWidgets/DataSource.dart';
+import '../customWidgets/UploadDialog.dart';
 
 class MyDocs extends StatefulWidget {
   const MyDocs({Key key}) : super(key: key);
@@ -17,10 +24,24 @@ class MyDocs extends StatefulWidget {
 class _MyDocsState extends State<MyDocs> {
   String nome = "";
   List<Documento> _docs = [];
+  List<Documento> _searchedDocs = [];
+  List<Documento> _filteredDocs = [];
+  bool docsUploaded = false;
+  TextEditingController _controllerSearch = TextEditingController();
+  Icon iconFilter;
+
+  List<Tag> tagsList = [];
+  List<String> typesList = [];
+  List<Tag> selectedTags = [];
+  List<String> selectedTypes = [];
+
+  int _rowPerPage = 5;
+  final keyPaginatedTable = GlobalKey<PaginatedDataTableState>();
 
   @override
   void initState() {
     super.initState();
+    iconFilter = Icon(Icons.tune_rounded);
     Model.sharedInstance.getDataFromToken().then((result) {
       setState(() {
         nome = result["given_name"];
@@ -30,6 +51,19 @@ class _MyDocsState extends State<MyDocs> {
     Model.sharedInstance.getMyDocuments().then((result) {
       setState(() {
         _docs = result;
+        docsUploaded = true;
+      });
+    });
+
+
+    Model.sharedInstance.getTagsByUser().then((result) {
+      setState(() {
+        tagsList = result;
+      });
+    });
+    Model.sharedInstance.getTypesByUser().then((result) {
+      setState(() {
+        typesList = result;
       });
     });
   }
@@ -39,19 +73,70 @@ class _MyDocsState extends State<MyDocs> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          InputField(
-            hint: AppLocalizations.of(context).search,
-            suffixIcon: IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {  },
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: InputField(
+                  controller: _controllerSearch,
+                  hint: AppLocalizations.of(context).search,
+                  onSubmit: (value) => _search(),
+                  onChanged: (value) => _search(),
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                    child: IconButton(
+                      icon: Icon(Icons.search),
+                      onPressed: () {
+                        _search();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.fromLTRB(10, 0, 20, 0),
+                decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(30)), color: Theme.of(context).primaryColor),
+                child: IconButton(
+                  icon: Icon(Icons.tune_rounded, color: Colors.white,),
+                  iconSize: 30,
+                  tooltip: AppLocalizations.of(context).advancedFilters,
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FilterChipDisplay(tagsList: tagsList, selectedTags: selectedTags, typesList: typesList, selectedTypes: selectedTypes, selectTag: selectTag, deselectTag: deselectTag, deselectAllTags: deselectAllTags, selectType: selectType, deselectType: deselectType, deselectAllTypes: deselectAllTypes, applyFilters: applyFilters,)),);
+                  },
+                ),
+              ),
+            ],
           ),
           Container(
             width: MediaQuery.of(context).size.width,
-            child: PaginatedDataTable(
+            child: !docsUploaded ? Center(child: SizedBox(child: CircularProgressIndicator(), height: 100, width: 100,)) :
+            PaginatedDataTable(
+              key: keyPaginatedTable,
               showCheckboxColumn: true,
-              header: Text("${AppLocalizations.of(context).docsof} $nome"),
-              rowsPerPage: 5,
+              header: Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                    child: Text("${AppLocalizations.of(context).docsof} $nome"),
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: IconButton(
+                      tooltip: AppLocalizations.of(context).uploadDoc,
+                      onPressed: () { _showUploadDialog(); },
+                      icon: Icon(Icons.add),
+                      color: Colors.white,
+                    ),
+                  )
+                ],
+              ),
+              onRowsPerPageChanged: (r) {
+                setState(() {
+                  _rowPerPage = r;
+                });
+              },
+              availableRowsPerPage: const [5, 10, 15, 20],
+              rowsPerPage: _rowPerPage,
+              showFirstLastButtons: true,
               columns: [
                 DataColumn(
                   label: Container(
@@ -81,11 +166,81 @@ class _MyDocsState extends State<MyDocs> {
                   ),
                 ),
               ],
-              source: DataSource(context, _docs),
+              source: (_searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty) && (selectedTypes.isNotEmpty || selectedTags.isNotEmpty) ?
+              DataSource(context, _searchedDocs.toSet().intersection(_filteredDocs.toSet()).toList()) :
+              _searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty ?
+              DataSource(context, _searchedDocs) :
+              selectedTypes.isNotEmpty || selectedTags.isNotEmpty ?
+              DataSource(context, _filteredDocs) :
+              DataSource(context, _docs),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void selectTag(Tag tag) {
+    selectedTags.add(tag);
+  }
+
+  void deselectTag(Tag tag) {
+    selectedTags.remove(tag);
+  }
+
+  void deselectAllTags() {
+    selectedTags.clear();
+  }
+
+  void selectType(String type) {
+    selectedTypes.add(type);
+  }
+
+  void deselectType(String type) {
+    selectedTypes.remove(type);
+  }
+
+  void deselectAllTypes() {
+    selectedTypes.clear();
+  }
+
+  void applyFilters() {
+    setState(() {
+      List<Documento> byTags = _docs.where((document) {
+        for (Tag t in selectedTags) {
+          if (document.tags.contains(t)) return true;
+        }
+        return false;
+      }).toList();
+      List<Documento> byTypes = _docs.where((document) {
+        for (String t in selectedTypes) {
+          if (t == document.formato) return true;
+        }
+        return false;
+      }).toList();
+
+      if(byTypes.isEmpty && byTags.isEmpty) {
+        _filteredDocs = [];
+      }
+      else if(byTypes.isEmpty) {
+        _filteredDocs = byTags;
+      } else if(byTags.isEmpty) {
+        _filteredDocs = byTypes;
+      } else {
+        _filteredDocs = byTags.toSet().intersection(byTypes.toSet()).toList();
+      }
+      keyPaginatedTable.currentState.pageTo(0);
+    });
+  }
+
+  void _showUploadDialog() {
+    showDialog(context: context, builder: (context) => const UploadDialog());
+  }
+
+  void _search() {
+    setState(() {
+      _searchedDocs = _docs.where((element) => element.titolo.toLowerCase().contains(_controllerSearch.text.toLowerCase())).toList();
+      keyPaginatedTable.currentState.pageTo(0);
+    });
   }
 }

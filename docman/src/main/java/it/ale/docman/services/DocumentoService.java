@@ -10,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,14 +111,42 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento carica(Documento documento) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentUrlAlreadyExistsException {
-        if(!utenteRepository.existsById(documento.getProprietario().getId()))
+    public Documento carica(String titolo, String descrizione, MultipartFile file) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentUrlAlreadyExistsException, IOException {
+        Utente proprietario = utenteRepository.findByEmail(Utils.getEmail());
+        if(proprietario == null)
             throw new UserNotExistsException();
+
+        int dotIndex = file.getOriginalFilename().lastIndexOf(".");
+        String extension;
+        if(dotIndex != -1)
+            extension = file.getOriginalFilename().substring(dotIndex + 1);
+        else
+            extension = "";
+        String url = "C:/Users/aless/IdeaProjects/SDCCproject/docman/src/main/resources/uploadedFiles/";
+
+        Documento documento = new Documento();
+        if(extension.equals(""))
+            documento.setUrl(url+titolo);
+        else
+            documento.setUrl(url+titolo+"."+extension);
+        documento.setTitolo(titolo);
+        documento.setFormato(extension);
+        documento.setData(LocalDateTime.now());
+        documento.setDescrizione(descrizione);
+        documento.setDimensione(Integer.parseInt(bytesToSize(file.getSize())[0]));
+        documento.setUnita_dimensione(bytesToSize(file.getSize())[1]);
+        documento.setCestino(false);
+        documento.setProprietario(proprietario);
+
         if(documentoRepository.existsByUrl(documento.getUrl()))
             throw new DocumentUrlAlreadyExistsException();
         if(documentoRepository.existsByTitolo(documento.getTitolo()))
             throw new DocumentTitleAlreadyExistsException();
 
+        if(extension.equals(""))
+            file.transferTo(new File(url+titolo));
+        else
+            file.transferTo(new File(url+titolo+"."+extension));
         return documentoRepository.save(documento);
     }
 
@@ -222,7 +254,18 @@ public class DocumentoService {
         if(!utenteRepository.existsById(proprietario.getId()))
             throw new UserNotExistsException();
 
-        return documentoRepository.findAllTypesByProprietario(proprietario);
+        List<String> formatiProprietario = documentoRepository.findAllTypesByProprietario(proprietario);
+        List<Documento> documentiProprietario = mostraPerUtente(proprietario);
+        List<String> result = new ArrayList<>();
+
+        for(String s : formatiProprietario)
+            for(Documento d : documentiProprietario)
+                if(d.getFormato().equals(s)) {
+                    result.add(s);
+                    break;
+                }
+
+        return result;
     }
 
     @Transactional
@@ -267,5 +310,12 @@ public class DocumentoService {
         listaTag.remove(tag);
 
         return "Documento " + idDocumento + ": tag " + idTag + " rimosso!";
+    }
+
+    private String[] bytesToSize(long bytes) {
+        String sizes[] = {"B", "KB", "MB", "GB", "TB"};
+        if (bytes == 0) return new String[]{String.valueOf(0), "B"};
+        int i = (int) Math.floor(Math.log(bytes) / Math.log(1024));
+        return new String[]{String.valueOf(Math.round(bytes / Math.pow(1024, i))), sizes[i]};
     }
 }
