@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../model/Model.dart';
 import '../pages/MyDocs.dart';
+import '../pages/Settings.dart';
 import '../pages/Shared.dart';
 import '../pages/Trash.dart';
 
@@ -43,7 +44,11 @@ class _AppBarNarrowState extends State<AppBarNarrow> {
           offset: const Offset(0, 70),
           onSelected: (result) async {
             switch(result) {
-              case 0: print(AppLocalizations.of(context).settings); break; //Navigator.pushNamed(context, '/settings'); break;
+              case 0:
+              case 0: {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => Settings()));
+                break;
+              }
               case 1: {
                 await Model.sharedInstance.logOut();
                 Navigator.of(context).popUntil((route) => route.isFirst);
@@ -57,7 +62,7 @@ class _AppBarNarrowState extends State<AppBarNarrow> {
                 child: Row(
                   children: [
                     const Icon(Icons.settings, color: Colors.black,),
-                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).settings),)
+                    Padding(padding: const EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).settings),)
                   ],
                 )
             ),
@@ -66,14 +71,14 @@ class _AppBarNarrowState extends State<AppBarNarrow> {
                 child: Row(
                   children: [
                     const Icon(Icons.logout, color: Colors.black,),
-                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).logout),)
+                    Padding(padding: const EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).logout),)
                   ],
                 )
             ),
           ],
           child: Row(
             children: [
-              Text(email, style: TextStyle(color: Colors.white, fontSize: 18)),
+              Text(email, style: const TextStyle(color: Colors.white, fontSize: 18)),
               Icon(Icons.arrow_drop_down_rounded, color: Colors.white),
             ],
           ),

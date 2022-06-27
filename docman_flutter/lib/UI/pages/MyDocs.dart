@@ -11,7 +11,7 @@ import 'package:fluttericon/font_awesome_icons.dart';
 
 import '../../model/Model.dart';
 import '../../model/objects/Tag.dart';
-import '../customWidgets/DataSource.dart';
+import '../customWidgets/DataSourceDocs.dart';
 import '../customWidgets/UploadDialog.dart';
 
 class MyDocs extends StatefulWidget {
@@ -36,7 +36,7 @@ class _MyDocsState extends State<MyDocs> {
   List<String> selectedTypes = [];
 
   int _rowPerPage = 5;
-  final keyPaginatedTable = GlobalKey<PaginatedDataTableState>();
+  final _keyPaginatedTable = GlobalKey<PaginatedDataTableState>();
 
   @override
   void initState() {
@@ -110,7 +110,7 @@ class _MyDocsState extends State<MyDocs> {
             width: MediaQuery.of(context).size.width,
             child: !docsUploaded ? Center(child: SizedBox(child: CircularProgressIndicator(), height: 100, width: 100,)) :
             PaginatedDataTable(
-              key: keyPaginatedTable,
+              key: _keyPaginatedTable,
               showCheckboxColumn: true,
               header: Row(
                 children: [
@@ -167,17 +167,24 @@ class _MyDocsState extends State<MyDocs> {
                 ),
               ],
               source: (_searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty) && (selectedTypes.isNotEmpty || selectedTags.isNotEmpty) ?
-              DataSource(context, _searchedDocs.toSet().intersection(_filteredDocs.toSet()).toList()) :
+              DataSourceDocs(context, _searchedDocs.toSet().intersection(_filteredDocs.toSet()).toList(), delete) :
               _searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty ?
-              DataSource(context, _searchedDocs) :
+              DataSourceDocs(context, _searchedDocs, delete) :
               selectedTypes.isNotEmpty || selectedTags.isNotEmpty ?
-              DataSource(context, _filteredDocs) :
-              DataSource(context, _docs),
+              DataSourceDocs(context, _filteredDocs, delete) :
+              DataSourceDocs(context, _docs, delete),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void delete(int idDoc) {
+    setState(() {
+      _docs.removeWhere((documento) => idDoc == documento.id);
+      _filteredDocs.removeWhere((documento) => idDoc == documento.id);
+    });
   }
 
   void selectTag(Tag tag) {
@@ -229,7 +236,7 @@ class _MyDocsState extends State<MyDocs> {
       } else {
         _filteredDocs = byTags.toSet().intersection(byTypes.toSet()).toList();
       }
-      keyPaginatedTable.currentState.pageTo(0);
+      _keyPaginatedTable.currentState.pageTo(0);
     });
   }
 
@@ -240,7 +247,7 @@ class _MyDocsState extends State<MyDocs> {
   void _search() {
     setState(() {
       _searchedDocs = _docs.where((element) => element.titolo.toLowerCase().contains(_controllerSearch.text.toLowerCase())).toList();
-      keyPaginatedTable.currentState.pageTo(0);
+      _keyPaginatedTable.currentState.pageTo(0);
     });
   }
 }

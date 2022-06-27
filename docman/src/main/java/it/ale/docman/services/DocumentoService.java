@@ -228,10 +228,12 @@ public class DocumentoService {
             throw new UserNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
-        if(documento.getProprietario().getId() != utenteRepository.findByEmail(Utils.getEmail()).getId())
+        Utente utente = utenteRepository.findById(idUtente);
+
+        if(documento.getProprietario().getId() != utenteRepository.findByEmail(Utils.getEmail()).getId() &&
+           !documento.getUtenti().contains(utente))
             throw new DocumentNotOwnedException();
 
-        Utente utente = utenteRepository.findById(idUtente);
 
         List<Documento> documentiCondivisi = utente.getDocumentiCondivisi();
         documentiCondivisi.remove(documento);

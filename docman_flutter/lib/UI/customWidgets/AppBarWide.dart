@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../model/Model.dart';
-import '../pages/MyDocs.dart';
-import '../pages/Shared.dart';
-import '../pages/Trash.dart';
+import '../pages/Settings.dart';
 
 class AppBarWide extends StatefulWidget {
   Function setTileAndBody;
@@ -66,19 +64,19 @@ class _AppBarWideState extends State<AppBarWide> {
             height: 80,
             color: _color1,
             onPressed: () => _btnAppBar(1),
-            child: Text(AppLocalizations.of(context).mydocs, style: TextStyle(color: Colors.white, fontSize: 18)),
+            child: Text(AppLocalizations.of(context).mydocs, style: const TextStyle(color: Colors.white, fontSize: 18)),
           ),
           MaterialButton(
             height: 80,
             color: _color2,
             onPressed: () => _btnAppBar(2),
-            child: Text(AppLocalizations.of(context).shareddocs, style: TextStyle(color: Colors.white, fontSize: 18)),
+            child: Text(AppLocalizations.of(context).shareddocs, style: const TextStyle(color: Colors.white, fontSize: 18)),
           ),
           MaterialButton(
             height: 80,
             color: _color3,
             onPressed: () => _btnAppBar(3),
-            child: Text(AppLocalizations.of(context).trash, style: TextStyle(color: Colors.white, fontSize: 18)),
+            child: Text(AppLocalizations.of(context).trash, style: const TextStyle(color: Colors.white, fontSize: 18)),
           ),
 
         ],
@@ -89,7 +87,10 @@ class _AppBarWideState extends State<AppBarWide> {
           offset: const Offset(0, 70),
           onSelected: (result) async {
             switch(result) {
-              case 0: print(AppLocalizations.of(context).settings); break; //Navigator.pushNamed(context, '/settings'); break;
+              case 0: {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const Settings()));
+                break;
+              } //Navigator.pushNamed(context, '/settings'); break;
               case 1: {
                 await Model.sharedInstance.logOut();
                 Navigator.of(context).popUntil((route) => route.isFirst);
@@ -101,18 +102,18 @@ class _AppBarWideState extends State<AppBarWide> {
             PopupMenuItem(
                 value: 0,
                 child: Row(
-                  children: const [
-                    Icon(Icons.settings, color: Colors.black,),
-                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text("Impostazioni"),)
+                  children: [
+                    const Icon(Icons.settings, color: Colors.black,),
+                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).settings),)
                   ],
                 )
             ),
             PopupMenuItem(
                 value: 1,
                 child: Row(
-                  children: const [
-                    Icon(Icons.logout, color: Colors.black,),
-                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text("Esci"),)
+                  children: [
+                    const Icon(Icons.logout, color: Colors.black,),
+                    Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).logout),)
                   ],
                 )
             ),

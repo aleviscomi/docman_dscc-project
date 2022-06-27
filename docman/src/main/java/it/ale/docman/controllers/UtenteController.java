@@ -41,6 +41,12 @@ public class UtenteController {
         }
     }
 
+    @GetMapping("/loggato")
+    @PreAuthorize("hasAuthority('utente')")
+    public ResponseEntity utenteLoggato() {
+        return new ResponseEntity(utenteService.trovaPerEmail(Utils.getEmail()), HttpStatus.OK);
+    }
+
     @GetMapping("/dacondividere")
     @PreAuthorize("hasAuthority('utente')")
     public ResponseEntity utentiPerCondivisione(@RequestParam("id_doc") int idDoc) {

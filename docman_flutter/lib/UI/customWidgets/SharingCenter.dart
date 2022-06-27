@@ -82,7 +82,7 @@ class _SharingCenterState extends State<SharingCenter> {
               trailing: IconButton(
                 icon: Icon(Icons.person_remove_alt_1_outlined),
                 onPressed: () {
-                  Model.sharedInstance.removeAccessDocument(widget.documento.id, giaCondivisi[index].id).then((result) {
+                  Model.sharedInstance.unshareDocument(widget.documento.id, giaCondivisi[index].id).then((result) {
                     if(result) {
                       Navigator.pop(context);
                       showDialog(context: context, builder: (context) => SharingCenter(widget.documento));

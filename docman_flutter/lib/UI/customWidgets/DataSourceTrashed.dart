@@ -3,15 +3,16 @@ import 'package:docman_flutter/model/objects/Documento.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
-import 'package:fluttericon/font_awesome_icons.dart';
 import 'package:intl/intl.dart';
 
 import 'SharingCenter.dart';
 
-class DataSource extends DataTableSource {
+class DataSourceTrashed extends DataTableSource {
   List<Documento> docs;
+  Function restoreCallback;
+  Function permanentlyDeleteCallback;
 
-  DataSource(this.context, this.docs) {
+  DataSourceTrashed(this.context, this.docs, this.restoreCallback, this.permanentlyDeleteCallback) {
     _rows = <_Row>[
       for(Documento d in docs)
         _Row(
@@ -57,14 +58,12 @@ class DataSource extends DataTableSource {
               offset: const Offset(0, 20),
               onSelected: (result) {
                 switch(result) {
-                  case 0: print(AppLocalizations.of(context).download); break;
-                  case 1: print("Info"); break;
-                  case 2: {
-                    _openSharingCenter(row.documento);
+                  case 0: {
+                    _restoreDoc(row.id);
                     break;
                   }
-                  case 3: {
-                    _deleteDoc(row.id);
+                  case 1: {
+                    showConfirm(row.id);
                     break;
                   }
                 }
@@ -74,35 +73,17 @@ class DataSource extends DataTableSource {
                     value: 0,
                     child: Row(
                       children: [
-                        Icon(Icons.download_outlined, color: Colors.black,),
-                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).download),)
+                        const Icon(Icons.restore, color: Colors.black,),
+                        Padding(padding: const EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).restore),)
                       ],
                     )
                 ),
                 PopupMenuItem(
                     value: 1,
                     child: Row(
-                      children: const [
-                        Icon(Icons.info_outline_rounded, color: Colors.black,),
-                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text("Info"),)
-                      ],
-                    )
-                ),
-                PopupMenuItem(
-                    value: 2,
-                    child: Row(
                       children: [
-                        const Icon(Icons.person_add_alt, color: Colors.black,),
-                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).share),)
-                      ],
-                    )
-                ),
-                PopupMenuItem(
-                    value: 3,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete_outline_outlined, color: Colors.black,),
-                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).delete),)
+                        const Icon(Icons.delete_forever, color: Colors.black,),
+                        Padding(padding: EdgeInsets.fromLTRB(20, 0, 0, 0), child: Text(AppLocalizations.of(context).permanentlyDelete),)
                       ],
                     )
                 ),
@@ -123,14 +104,63 @@ class DataSource extends DataTableSource {
   @override
   int get selectedRowCount => _selectedCount;
 
-  void _deleteDoc(int id) {
-    Model.sharedInstance.deleteDocument(id).then((result) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.pushNamed(context, '/');
+  void _restoreDoc(int id) {
+    Model.sharedInstance.restoreDocument(id).then((result) {
+      if(result) {
+        restoreCallback(id);
+      }
     });
   }
-  void _openSharingCenter(Documento documento) {
-    showDialog(context: context, builder: (context) => SharingCenter(documento));
+
+  void _permanentlyDeleteDoc(int id) {
+    Model.sharedInstance.permanentlyDeleteDocument(id).then((result) {
+      if(result) {
+        permanentlyDeleteCallback(id);
+      }
+    });
+  }
+
+  void showConfirm(int idDoc) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.delete, size: 30,),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                  child: Text(AppLocalizations.of(context).confirmDelete),
+                ),
+              ],
+            ),
+            actions: [
+              MaterialButton(
+                height: 40,
+                minWidth: 100,
+                onPressed: () {
+                  _permanentlyDeleteDoc(idDoc);
+                  Navigator.pop(context);
+                },
+                elevation: 6.0,
+                color: Theme.of(context).primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: Text(AppLocalizations.of(context).yes, style: const TextStyle(color: Colors.white, fontSize: 16)),
+              ),
+              MaterialButton(
+                height: 40,
+                minWidth: 100,
+                onPressed: () { Navigator.pop(context); },
+                elevation: 6.0,
+                color: Theme.of(context).primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                child: Text(AppLocalizations.of(context).no, style: const TextStyle(color: Colors.white, fontSize: 16)),
+              ),
+            ],
+          );
+        }
+    );
   }
 
   Icon setIcon(String formato) {

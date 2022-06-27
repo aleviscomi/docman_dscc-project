@@ -1,17 +1,11 @@
-import 'dart:developer';
-
 import 'package:docman_flutter/UI/customWidgets/AppBarWide.dart';
 import 'package:docman_flutter/UI/customWidgets/AppBarNarrow.dart';
 import 'package:docman_flutter/UI/pages/MyDocs.dart';
 import 'package:docman_flutter/UI/pages/Shared.dart';
 import 'package:docman_flutter/UI/pages/Trash.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-import '../../supports/Constants.dart';
-import '../customWidgets/InputField.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key key}) : super(key: key);
@@ -161,7 +155,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void handleMenuButtonPressed() {
-    // NOTICE: Manage Advanced Drawer state through the Controller.
     // _advancedDrawerController.value = AdvancedDrawerValue.visible();
     _advancedDrawerController.showDrawer();
   }

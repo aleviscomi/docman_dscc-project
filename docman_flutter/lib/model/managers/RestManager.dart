@@ -65,8 +65,8 @@ class RestManager {
     return _makeRequest(serverAddress, servicePath, "get", type, value: value);
   }
 
-  Future<String> makePutRequest(String serverAddress, String servicePath, dynamic value, {TypeHeader type = TypeHeader.json}) async {
-    return _makeRequest(serverAddress, servicePath, "put", type, body: value);
+  Future<String> makePutRequest(String serverAddress, String servicePath, {Map<String, String> value, dynamic body, TypeHeader type = TypeHeader.json}) async {
+    return _makeRequest(serverAddress, servicePath, "put", type, value: value, body: body);
   }
 
   Future<String> makeDeleteRequest(String serverAddress, String servicePath, [Map<String, String> value, TypeHeader type = TypeHeader.json]) async {
