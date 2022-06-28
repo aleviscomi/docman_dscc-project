@@ -8,6 +8,10 @@
     "loginString": "Accedi al tuo account!",
     "wrongCredentials": "Credenziali errate!!!",
 
+    "createAccount": "Create account",
+    "name": "Name",
+    "surname": "Surname",
+    "repeatPassword": "Repeat password",
 
     "mydocs": "Miei Documenti",
     "shareddocs": "Condivisi con me",
@@ -27,6 +31,8 @@
     "download": "Scarica",
     "title": "Titolo",
     "description": "Descrizione",
+    "tags": "Tags",
+    "enterTags": "Aggiungi tags...",
     "selectFile": "Seleziona File",
     "uploadError": "Errore nel caricamento del file",
     "sharingCenter": "Centro di condivisione",
@@ -43,9 +49,12 @@
     "yes": "Sì",
     "no": "No",
     "modify": "Modifica",
+    "updateInfo": "Aggiorna info",
     "done": "Fatto",
     "nameOrSurnameEmpty": "Devi inserire nome e cognome!",
     "emailEmpty": "Devi inserire la tua email!",
     "passwordNot8": "La password deve avere almeno 8 caratteri!",
-    "emailAlreadyExists": "A user is already registered with this e-mail!"
+    "emailAlreadyExists": "A user is already registered with this e-mail!",
+    "passwordsNotMatch": "Le password non corrispondono!",
+    "unknownError": "Errore sconosciuto!"
 }

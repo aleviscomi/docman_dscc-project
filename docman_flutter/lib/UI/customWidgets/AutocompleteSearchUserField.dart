@@ -98,6 +98,7 @@ class _AutocompleteShareUserFieldState extends State<AutocompleteShareUserField>
                 focusNode: focusNode,
                 onEditingComplete: onEditingComplete,
                 decoration: InputDecoration(
+                  isDense: true,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey[300]),

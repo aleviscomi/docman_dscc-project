@@ -12,10 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../supports/Constants.dart';
 import '../supports/LogInResult.dart';
 import '../supports/ModifyResult.dart';
+import '../supports/SignUpResult.dart';
 import 'managers/RestManager.dart';
 import 'objects/AuthenticationData.dart';
 import 'package:http/http.dart';
 
+import 'objects/Info.dart';
 import 'objects/Tag.dart';
 import 'objects/Utente.dart';
 
@@ -135,6 +137,63 @@ class Model {
     }
   }
 
+  Future<SignUpResult> addUser(Utente utente, String password) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    try {
+      // Registro il cliente sul resource server (per recuperare anche l'id da esso autogenerato)
+      String rawResult = await _restManager.makePostRequest(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_ADD_USER, body: utente);
+
+      if (rawResult.contains(Constants.RESPONSE_ERROR_MAIL_ALREADY_EXISTS)) {
+        return SignUpResult.mail_already_exists;
+      }
+      Utente result = Utente.fromJson(jsonDecode(rawResult));
+
+      // Registrazione su Keycloak
+      // 1. Richiedo il token al realm Master per poter richiedere la registrazione
+      Map<String, String> params = Map();
+      params["grant_type"] = "password";
+      params["client_id"] = Constants.CLIENT_ID_MASTER;
+      params["username"] = Constants.USERNAME_MASTER;
+      params["password"] = Constants.PASSWORD_MASTER;
+      String keycloak = await _restManager.makePostRequest(Constants.ADDRESS_AUTHENTICATION_SERVER, Constants.REQUEST_LOGIN_MASTER, body: params, type: TypeHeader.urlencoded);
+      _authenticationData = AuthenticationData.fromJson(jsonDecode(keycloak));
+      preferences.setString('token', _authenticationData.accessToken);
+
+      // 2. Creo il corpo della richiesta per registrare l'utente e invio la richiesta a Keycloak
+      var paramsKeycloakAsString = '''{
+        "firstName": "${utente.nome}",
+        "lastName": "${utente.cognome}",
+        "email": "${utente.email}",
+        "username": "${utente.email}",
+        "attributes" : {
+          "id": ${result.id}
+        },
+        "credentials" : [{
+          "type": "password",
+          "value": "$password",
+          "temporary": false
+        }],
+        "enabled": true
+      }''';
+      Map keycloakJson = json.decode(paramsKeycloakAsString);
+      String response = await _restManager.makePostRequest(Constants.ADDRESS_AUTHENTICATION_SERVER, Constants.REQUEST_SIGNUP, body: keycloakJson);
+
+      if(response.isNotEmpty) return SignUpResult.unknown_error;
+
+      // 3. Effettuo il logout dal realm Master
+      params = Map();
+      preferences.remove('token');
+      params["client_id"] = Constants.CLIENT_ID_MASTER;
+      params["refresh_token"] = _authenticationData.refreshToken;
+      await _restManager.makePostRequest(Constants.ADDRESS_AUTHENTICATION_SERVER, Constants.REQUEST_LOGOUT_MASTER, body: params, type: TypeHeader.urlencoded);
+
+      return SignUpResult.signup;
+    }
+    catch (e) {
+      return SignUpResult.unknown_error;
+    }
+  }
+
   Future<ModifyResult> modifySettings(Utente utente, String oldEmail, String password) async {
     try {
       _modifyOnKeycloak(utente, oldEmail, password);
@@ -197,7 +256,7 @@ class Model {
     }
   }
 
-  Future<bool> uploadDocument(String titolo, String descrizione, PlatformFile fileUploaded) async {
+  Future<Response> uploadDocument(String titolo, String descrizione, PlatformFile fileUploaded) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
 
     Uri uri = Uri.http(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_UPLOAD_DOC, null);
@@ -212,13 +271,55 @@ class Model {
     try {
       final streamedResponse = await uploadRequest.send();
       final response = await Response.fromStream(streamedResponse);
-      if(response.statusCode != 200) {
+      return response;
+    } catch(e) {
+      print(e);
+      return null;
+    }
+  }
+
+  Future<List<Tag>> getDocumentTags(Documento documento) async {
+    try {
+      Map<String, String> params = Map();
+      params['id'] = documento.id.toString();
+      String rawResult = await _restManager.makeGetRequest(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_DOCUMENT_TAGS, params);
+      if (rawResult.contains(Constants.RESPONSE_ERROR_DOCUMENT_NOT_EXISTS)) {
+        return [];
+      }
+      return List<Tag>.from(json.decode(rawResult).map((i) => Tag.fromJson(i)).toList());
+    } catch(e) {
+      print(e);
+      return null;
+    }
+  }
+
+  Future<bool> modifyDocumentInfo(Info info, int idDoc) async {
+    try {
+      Map<String, String> params = Map();
+      params['doc'] = idDoc.toString();
+      String rawResult = await _restManager.makePutRequest(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_MODIFY_DOCUMENT_INFO, value: params, body: info);
+      if (rawResult.contains(Constants.RESPONSE_ERROR_DOCUMENT_NOT_EXISTS) || rawResult.contains(Constants.RESPONSE_ERROR_DOCUMENT_NOT_OWNED)) {
         return false;
       }
       return true;
     } catch(e) {
       print(e);
-      return false;
+      return null;
+    }
+  }
+
+  Future<bool> addTagsDocument(List<String> tags, int idDocumento) async {
+    try {
+      Map<String, String> params = Map();
+      params['doc'] = idDocumento.toString();
+      String rawResult = await _restManager.makePostRequest(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_ADD_TAGS_TO_DOC, value: params, body: tags);
+      if (rawResult.contains(Constants.RESPONSE_ERROR_DOCUMENT_NOT_EXISTS) || rawResult.contains(Constants.RESPONSE_ERROR_DOCUMENT_NOT_OWNED)) {
+        return false;
+      }
+      return true;
+    } catch(e) {
+      print(e);
+      return null;
     }
   }
 

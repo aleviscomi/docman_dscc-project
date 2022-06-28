@@ -5,7 +5,6 @@ import 'package:docman_flutter/supports/Constants.dart';
 import 'package:filter_list/filter_list.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:fluttericon/font_awesome_icons.dart';
 
@@ -84,7 +83,7 @@ class _MyDocsState extends State<MyDocs> {
                   suffixIcon: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                     child: IconButton(
-                      icon: Icon(Icons.search),
+                      icon: const Icon(Icons.search, size: 22),
                       onPressed: () {
                         _search();
                       },
@@ -97,7 +96,7 @@ class _MyDocsState extends State<MyDocs> {
                 decoration: BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(30)), color: Theme.of(context).primaryColor),
                 child: IconButton(
                   icon: Icon(Icons.tune_rounded, color: Colors.white,),
-                  iconSize: 30,
+                  iconSize: 26,
                   tooltip: AppLocalizations.of(context).advancedFilters,
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => FilterChipDisplay(tagsList: tagsList, selectedTags: selectedTags, typesList: typesList, selectedTypes: selectedTypes, selectTag: selectTag, deselectTag: deselectTag, deselectAllTags: deselectAllTags, selectType: selectType, deselectType: deselectType, deselectAllTypes: deselectAllTypes, applyFilters: applyFilters,)),);

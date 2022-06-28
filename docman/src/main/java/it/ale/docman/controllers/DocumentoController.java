@@ -1,10 +1,9 @@
 package it.ale.docman.controllers;
 
-import it.ale.docman.entities.Documento;
-import it.ale.docman.entities.Tag;
 import it.ale.docman.entities.Utente;
 import it.ale.docman.services.DocumentoService;
 import it.ale.docman.services.UtenteService;
+import it.ale.docman.supports.Info;
 import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileStore;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -171,27 +167,23 @@ public class DocumentoController {
         }
     }
 
-    @GetMapping("/aggiungitags")
-    public ResponseEntity aggiungiTagsDocumento(@RequestBody @Valid List<Tag> tags, @RequestParam("doc") int idDocumento) {
+    @PostMapping("/aggiungitags")
+    public ResponseEntity aggiungiTagsDocumento(@RequestBody @Valid List<String> tags, @RequestParam("doc") int idDocumento) {
         try {
             return new ResponseEntity(documentoService.aggiungiTags(tags, idDocumento), HttpStatus.OK);
         } catch (DocumentNotExistsException e) {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
-        } catch (TagNotExistsException e) {
-            return new ResponseEntity("Stai usando dei tag inesistenti!", HttpStatus.BAD_REQUEST);
         } catch (DocumentNotOwnedException e) {
             return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @GetMapping("/rimuovitag")
-    public ResponseEntity rimuoviTagDocumento(@RequestParam("tag") int idTag, @RequestParam("doc") int idDocumento) {
+    @PutMapping("/modificainfo")
+    public ResponseEntity modificaInfoDocumento(@RequestBody @Valid Info info, @RequestParam("doc") int idDocumento) {
         try {
-            return new ResponseEntity(documentoService.rimuoviTag(idTag, idDocumento), HttpStatus.OK);
+            return new ResponseEntity(documentoService.modificaInfo(info, idDocumento), HttpStatus.OK);
         } catch (DocumentNotExistsException e) {
             return new ResponseEntity("Documento inesistente!", HttpStatus.BAD_REQUEST);
-        } catch (TagNotExistsException e) {
-            return new ResponseEntity("Tag inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentNotOwnedException e) {
             return new ResponseEntity("Questo documento non è di tua proprietà!", HttpStatus.BAD_REQUEST);
         }

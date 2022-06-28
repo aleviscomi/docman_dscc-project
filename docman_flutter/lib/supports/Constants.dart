@@ -30,6 +30,7 @@ class Constants {
   static const String REQUEST_SIGNUP = "/auth/admin/realms/" + REALM + "/users";
 
   //requests
+  static const String REQUEST_ADD_USER = "/utenti/registra";
   static const String REQUEST_MY_DOCS = "/documenti/miei";
   static const String REQUEST_SHARED_WITH_ME_DOCS = "/documenti/condivisiconme";
   static const String REQUEST_MY_TRASHED_DOCS = "/documenti/cestino";
@@ -40,6 +41,9 @@ class Constants {
   static const String REQUEST_SHARE_DOC = "/documenti/condividi";
   static const String REQUEST_REMOVE_ACCESS_DOC = "/documenti/rimuoviaccesso";
   static const String REQUEST_TYPES_BY_USER = "/documenti/formato";
+  static const String REQUEST_ADD_TAGS_TO_DOC = "/documenti/aggiungitags";
+  static const String REQUEST_DOCUMENT_TAGS = "/documenti/tagsDocumento";
+  static const String REQUEST_MODIFY_DOCUMENT_INFO = "/documenti/modificainfo";
 
   static const String REQUEST_TO_SHARE = "/utenti/dacondividere";
   static const String REQUEST_SHARED_USERS = "/utenti/giacondivisi";

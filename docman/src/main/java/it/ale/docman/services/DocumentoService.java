@@ -4,6 +4,7 @@ import it.ale.docman.entities.*;
 import it.ale.docman.repositories.DocumentoRepository;
 import it.ale.docman.repositories.TagRepository;
 import it.ale.docman.repositories.UtenteRepository;
+import it.ale.docman.supports.Info;
 import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -271,47 +272,63 @@ public class DocumentoService {
     }
 
     @Transactional
-    public String aggiungiTags(List<Tag> tags, int idDocumento) throws DocumentNotExistsException, TagNotExistsException, DocumentNotOwnedException  {
+    public String aggiungiTags(List<String> tags, int idDocumento) throws DocumentNotExistsException, DocumentNotOwnedException  {
         Utente utente = utenteRepository.findByEmail(Utils.getEmail());
         if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
-
-        for(Tag t : tags)
-            if(!tagRepository.existsById(t.getId()) || tagRepository.findById(t.getId()).getProprietario().getId() != utente.getId())
-                throw new TagNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
         if(documento.getProprietario().getId() != utente.getId())
             throw new DocumentNotOwnedException();
 
+
+        List<Tag> tagDaAggiungere = new ArrayList<>();
+        for(String t : tags) {
+            if (!tagRepository.existsByNomeAndProprietario(t, utente)) {
+                Tag nuovo = new Tag();
+                nuovo.setNome(t);
+                nuovo.setProprietario(utente);
+                tagRepository.save(nuovo);
+                tagDaAggiungere.add(nuovo);
+            } else
+                tagDaAggiungere.add(tagRepository.findByNomeAndProprietario(t, utente));
+        }
+
         List<Tag> listaTag = documento.getTags();
-        listaTag.addAll(tags);
+        listaTag.addAll(tagDaAggiungere);
 
         return "Documento " + idDocumento + ": tags aggiunti!";
     }
 
     @Transactional
-    public String rimuoviTag(int idTag, int idDocumento) throws DocumentNotExistsException, TagNotExistsException, DocumentNotOwnedException  {
+    public String modificaInfo(Info info, int idDocumento) throws DocumentNotExistsException, DocumentNotOwnedException  {
         Utente utente = utenteRepository.findByEmail(Utils.getEmail());
         if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
-
-        if(!tagRepository.existsById(idTag))
-            throw new TagNotExistsException();
-
-        Tag tag = tagRepository.findById(idTag);
-
-        if(tag.getProprietario().getId() != utente.getId())
-            throw new TagNotExistsException();
 
         Documento documento = documentoRepository.findById(idDocumento);
         if(documento.getProprietario().getId() != utente.getId())
             throw new DocumentNotOwnedException();
 
-        List<Tag> listaTag = documento.getTags();
-        listaTag.remove(tag);
+        documento.setDescrizione(info.getDescrizione());
 
-        return "Documento " + idDocumento + ": tag " + idTag + " rimosso!";
+        List<Tag> tagDaAggiungere = new ArrayList<>();
+        for(String t : info.getTags()) {
+            if (!tagRepository.existsByNomeAndProprietario(t, utente)) {
+                Tag nuovo = new Tag();
+                nuovo.setNome(t);
+                nuovo.setProprietario(utente);
+                tagRepository.save(nuovo);
+                tagDaAggiungere.add(nuovo);
+            } else
+                tagDaAggiungere.add(tagRepository.findByNomeAndProprietario(t, utente));
+        }
+
+        List<Tag> listaTag = documento.getTags();
+        listaTag.clear();
+        listaTag.addAll(tagDaAggiungere);
+
+        return "Documento " + idDocumento + ": tags modificati!";
     }
 
     private String[] bytesToSize(long bytes) {

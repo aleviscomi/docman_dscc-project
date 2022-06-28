@@ -1,3 +1,4 @@
+import 'package:docman_flutter/UI/customWidgets/InfoDialog.dart';
 import 'package:docman_flutter/model/Model.dart';
 import 'package:docman_flutter/model/objects/Documento.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,10 @@ class DataSourceDocs extends DataTableSource {
               onSelected: (result) {
                 switch(result) {
                   case 0: print(AppLocalizations.of(context).download); break;
-                  case 1: print("Info"); break;
+                  case 1: {
+                    _openInfoDialog(row.documento);
+                    break;
+                  }
                   case 2: {
                     _openSharingCenter(row.documento);
                     break;
@@ -130,6 +134,11 @@ class DataSourceDocs extends DataTableSource {
       }
     });
   }
+
+  void _openInfoDialog(Documento documento) {
+    showDialog(context: context, builder: (context) => InfoDialog(mydocs: true, documento: documento));
+  }
+
   void _openSharingCenter(Documento documento) {
     showDialog(context: context, builder: (context) => SharingCenter(documento));
   }

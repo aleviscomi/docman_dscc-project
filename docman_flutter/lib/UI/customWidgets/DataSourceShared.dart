@@ -7,6 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:intl/intl.dart';
 
+import 'InfoDialog.dart';
 import 'SharingCenter.dart';
 
 class DataSourceShared extends DataTableSource {
@@ -58,7 +59,10 @@ class DataSourceShared extends DataTableSource {
               onSelected: (result) {
                 switch(result) {
                   case 0: print(AppLocalizations.of(context).download); break;
-                  case 1: print("Info"); break;
+                  case 1: {
+                    _openInfoDialog(row.documento);
+                    break;
+                  }
                   case 2: {
                     showConfirm(row.id);
                     break;
@@ -161,6 +165,10 @@ class DataSourceShared extends DataTableSource {
         unshareCallback(id);
       }
     });
+  }
+
+  void _openInfoDialog(Documento documento) {
+    showDialog(context: context, builder: (context) => InfoDialog(mydocs: false, documento: documento));
   }
 
   Icon setIcon(String formato) {

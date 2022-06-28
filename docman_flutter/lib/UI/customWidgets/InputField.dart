@@ -24,7 +24,7 @@ class InputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
+      padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
       child: TextField(
         enabled: enabled,
         maxLength: maxLength,
@@ -39,31 +39,31 @@ class InputField extends StatelessWidget {
         onSubmitted: onSubmit,
         onTap: onTap,
         controller: controller,
-        style: TextStyle(fontSize: 16.0),
+        style: const TextStyle(fontSize: 16.0),
         decoration: InputDecoration(
+          isDense: true,
           hintText: hint,
           filled: backgroundColor == null ? false : true,
           fillColor: backgroundColor,
-          border: new OutlineInputBorder(
-            borderRadius: new BorderRadius.circular(10.0),
-            borderSide: BorderSide(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10.0),
+            borderSide: const BorderSide(
               color: Colors.grey,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: new BorderRadius.circular(10.0),
+            borderRadius: BorderRadius.circular(10.0),
             borderSide: BorderSide(
               color: Theme.of(context).primaryColor,
             ),
           ),
           labelText: labelText,
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             color: Colors.grey,
           ),
           suffixIcon: suffixIcon,
         ),
         textAlignVertical: TextAlignVertical.center,
-
       ),
     );
   }

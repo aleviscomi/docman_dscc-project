@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:docman_flutter/UI/customWidgets/ChipTagsInput.dart';
 import 'package:docman_flutter/UI/customWidgets/InputField.dart';
 import 'package:docman_flutter/model/Model.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:http/http.dart';
 
 class UploadDialog extends StatefulWidget {
 
@@ -17,6 +20,8 @@ class UploadDialog extends StatefulWidget {
 class _UploadDialogState extends State<UploadDialog> {
   TextEditingController _controllerTitolo = TextEditingController();
   TextEditingController _controllerDescrizione = TextEditingController();
+  final ChipTagsInput _chipTagsInput = ChipTagsInput(mydocs: true,);
+
   String _filenameUploaded = "";
   PlatformFile _fileUploaded;
   bool _enabledUpload = false;
@@ -31,22 +36,31 @@ class _UploadDialogState extends State<UploadDialog> {
           Divider(),
         ],
       ),
-      content: Container(
+      content: SizedBox(
         width: 500,
-        height: 400,
+        height: 500,
         child: SingleChildScrollView(
           child: Column(
             children: [
               buildSelectFile(),
               buildTitle(),
               buildDescription(),
+              buildAddTags(),
               buildSubmit()
             ],
-          )
+          ),
         )
       ),
     );
   }
+
+  Widget buildHeader() => ListTile(
+    title: Center(child: Text(AppLocalizations.of(context).uploadDoc, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18), overflow: TextOverflow.ellipsis,)),
+    trailing: IconButton(
+      icon: Icon(Icons.close),
+      onPressed: () { Navigator.pop(context); },
+    ),
+  );
 
   Widget buildSelectFile() => Column(
     children: [
@@ -87,16 +101,16 @@ class _UploadDialogState extends State<UploadDialog> {
         child: Row(
           children: [
             Expanded(
-                flex: 2,
-                child: RichText(
-                  text: const TextSpan(
+              flex: 2,
+              child: RichText(
+                text: const TextSpan(
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                     children:  [
                       TextSpan(text: "* ", style: TextStyle(color: Colors.red)),
                       TextSpan(text: "File:")
                     ]
-                  ),
                 ),
+              ),
             ),
             Expanded(
               flex: 7,
@@ -106,14 +120,6 @@ class _UploadDialogState extends State<UploadDialog> {
         ),
       ),
     ],
-  );
-
-  Widget buildHeader() => ListTile(
-    title: Center(child: Text(AppLocalizations.of(context).uploadDoc, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18), overflow: TextOverflow.ellipsis,)),
-    trailing: IconButton(
-      icon: Icon(Icons.close),
-      onPressed: () { Navigator.pop(context); },
-    ),
   );
 
   Widget buildTitle() => Row(
@@ -153,12 +159,15 @@ class _UploadDialogState extends State<UploadDialog> {
     children: [
       Expanded(
           flex: 1,
-          child: Text(AppLocalizations.of(context).description + ':', style: TextStyle(fontWeight: FontWeight.w800,))
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Text("${AppLocalizations.of(context).description}:", style: TextStyle(fontWeight: FontWeight.w800,)),
+          )
       ),
       Expanded(
         flex: 4,
         child: InputField(
-          maxlines: 3,
+          maxlines: 2,
           maxLength: 250,
           controller: _controllerDescrizione,
         ),
@@ -166,8 +175,21 @@ class _UploadDialogState extends State<UploadDialog> {
     ],
   );
 
+  Widget buildAddTags() => Row(
+    children: [
+      Expanded(
+          flex: 1,
+          child: Text("${AppLocalizations.of(context).tags}:", style: TextStyle(fontWeight: FontWeight.w800,))
+      ),
+      Expanded(
+        flex: 4,
+        child: _chipTagsInput,
+      )
+    ],
+  );
+
   Widget buildSubmit() => Padding(
-    padding: EdgeInsets.fromLTRB(0, 18, 0, 8),
+    padding: const EdgeInsets.fromLTRB(0, 30, 0, 8),
     child: MaterialButton(
       disabledColor: Colors.blueGrey,
       height: 40,
@@ -179,7 +201,7 @@ class _UploadDialogState extends State<UploadDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.cloud_upload_outlined, color: Colors.white,),
+          const Icon(Icons.cloud_upload_outlined, color: Colors.white,),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(AppLocalizations.of(context).uploadDoc, style: TextStyle(color: Colors.white, fontSize: 16)),
@@ -189,44 +211,55 @@ class _UploadDialogState extends State<UploadDialog> {
     ),
   );
 
-  void _uploadDoc() {
-    Model.sharedInstance.uploadDocument(_controllerTitolo.text, _controllerDescrizione.text, _fileUploaded).then(
-      (result) {
-        Navigator.pop(context);
-        if (result) {
+  Future<void> _uploadDoc() async {
+    Response result = await Model.sharedInstance.uploadDocument(_controllerTitolo.text, _controllerDescrizione.text, _fileUploaded);
+    if (result.statusCode == 200) {
+      List<String> tags = _chipTagsInput.controllerTags.getTags;
+      int idDoc = json.decode(result.body)["id"];
+      Model.sharedInstance.addTagsDocument(tags, idDoc).then((value) {
+        if(value) {
           Navigator.pushReplacementNamed(context, '/');
-        } else {
-          showDialog(
-            context: context,
-            builder: (context)
-            {
-              return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                title: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, size: 30,),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                      child: Text(AppLocalizations.of(context).uploadError),
-                    ),
-                  ],
-                ),
-                actions: [
-                  MaterialButton(
-                    height: 40,
-                    minWidth: 100,
-                    onPressed: () { Navigator.pop(context); },
-                    elevation: 6.0,
-                    color: Theme.of(context).primaryColor,
-                    child: Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ],
-              );
-            }
-          );
         }
+        else {
+          Navigator.pop(context);
+          _showError();
+        }
+      });
+    } else {
+      Navigator.pop(context);
+      _showError();
+    }
+  }
+
+  void _showError() {
+    showDialog(
+      context: context,
+      builder: (context)
+      {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 30,),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                child: Text(AppLocalizations.of(context).uploadError),
+              ),
+            ],
+          ),
+          actions: [
+            MaterialButton(
+              height: 40,
+              minWidth: 100,
+              onPressed: () { Navigator.pop(context); },
+              elevation: 6.0,
+              color: Theme.of(context).primaryColor,
+              child: Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ],
+        );
       }
     );
   }

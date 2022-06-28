@@ -57,7 +57,6 @@ class _LoginState extends State<Login> {
     children : [
       Icon(Icons.person_outline, color: Colors.grey, size: 42),
       SizedBox(
-        height: 85,
         width: 300,
         child: InputField(
           labelText: AppLocalizations.of(context).email,
@@ -73,7 +72,6 @@ class _LoginState extends State<Login> {
       children : [
         Icon(Icons.lock_outline, color: Colors.grey, size: 42),
         SizedBox(
-          height: 85,
           width: 300,
           child: InputField(
             keyboardType: TextInputType.visiblePassword,
