@@ -80,7 +80,7 @@ class _SignupState extends State<Signup> {
   Widget buildHeader() {
     return Column(
       children: [
-        Text("- ${AppLocalizations.of(context).createAccount} -", style: TextStyle(fontSize: 32, letterSpacing: 0.6)),
+        Text("${AppLocalizations.of(context).createAccount}", style: TextStyle(fontSize: 32, letterSpacing: 0.6)),
         Container(
           width: 425,
           child: Divider(),
@@ -95,7 +95,6 @@ class _SignupState extends State<Signup> {
       children : [
         Icon(Icons.person_outline, color: Colors.grey, size: 42),
         Container(
-          height: 75,
           width: 200,
           child: InputField(
             onSubmit: (value) { _register(); },
@@ -104,7 +103,6 @@ class _SignupState extends State<Signup> {
           ),
         ),
         Container(
-          height: 75,
           width: 200,
           child: InputField(
             onSubmit: (value) { _register(); },
@@ -122,7 +120,6 @@ class _SignupState extends State<Signup> {
         children : [
           Icon(Icons.email, color: Colors.grey, size: 42),
           Container(
-            height: 75,
             width: 400,
             child: InputField(
               onSubmit: (value) { _register(); },
@@ -140,7 +137,6 @@ class _SignupState extends State<Signup> {
         children : [
           Icon(Icons.lock_outline, color: Colors.grey, size: 42),
           Container(
-            height: 75,
             width: 400,
             child: InputField(
               onSubmit: (value) { _register(); },
@@ -160,7 +156,6 @@ class _SignupState extends State<Signup> {
         children : [
           Icon(Icons.vpn_key_outlined, color: Colors.grey, size: 42),
           Container(
-            height: 75,
             width: 400,
             child: InputField(
               onSubmit: (value) { _register(); },
@@ -236,16 +231,20 @@ class _SignupState extends State<Signup> {
       SignUpResult status = await Model.sharedInstance.addUser(utente, _passwordController.text);
       switch(status) {
         case SignUpResult.mail_already_exists:
-          setState(() {
-            _doingSignup = false;
-            _errorEmail = AppLocalizations.of(context).emailAlreadyExists;
-          });
+          if(mounted) {
+            setState(() {
+              _doingSignup = false;
+              _errorEmail = AppLocalizations.of(context).emailAlreadyExists;
+            });
+          }
           return;
         case SignUpResult.unknown_error:
-          setState(() {
-            _doingSignup = false;
-            _errorNameOrUnknown = AppLocalizations.of(context).unknownError;
-          });
+          if(mounted) {
+            setState(() {
+              _doingSignup = false;
+              _errorNameOrUnknown = AppLocalizations.of(context).unknownError;
+            });
+          }
           return;
       }
 

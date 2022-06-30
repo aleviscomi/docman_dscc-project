@@ -16,9 +16,6 @@ public class Documento {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "url", length = 750, nullable = false)
-    private String url;
-
     @Column(name = "titolo", length = 100, nullable = false)
     private String titolo;
 
@@ -49,6 +46,5 @@ public class Documento {
     private List<Tag> tags;
 
     @ManyToMany(mappedBy = "documentiCondivisi")
-    @JsonIgnore
     private List<Utente> utenti;
 }

@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, Integer> {
     boolean existsById(int id);
-    boolean existsByUrl(String url);
     boolean existsByTitolo(String titolo);
     Documento findById(int id);
     List<Documento> findByProprietarioAndTitoloContainingIgnoreCaseAndCestino(Utente proprietario, String titolo, boolean cestino);

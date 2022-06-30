@@ -3,7 +3,6 @@ import 'Utente.dart';
 
 class Documento{
   int id;
-  String url;
   String titolo;
   String formato;
   DateTime data;
@@ -13,13 +12,13 @@ class Documento{
   bool cestino;
   Utente proprietario;
   List<Tag> tags;
+  List<Utente> condivisi;
 
-  Documento({this.id, this.url, this.titolo, this.formato, this.data, this.descrizione, this.dimensione, this.unitaDimensione, this.cestino, this.proprietario, this.tags});
+  Documento({this.id, this.titolo, this.formato, this.data, this.descrizione, this.dimensione, this.unitaDimensione, this.cestino, this.proprietario, this.tags, this.condivisi});
 
   factory Documento.fromJson(Map<String, dynamic> json) {
     return Documento(
       id: json['id'],
-      url: json['url'],
       titolo: json['titolo'],
       formato: json['formato'],
       data: DateTime.parse(json['data']),
@@ -29,12 +28,12 @@ class Documento{
       cestino: json['cestino'],
       proprietario: Utente.fromJson(json['proprietario']),
       tags: List<Tag>.from(json['tags'].map((i) => Tag.fromJson(i)).toList()),
+      condivisi: List<Utente>.from(json['utenti'].map((i) => Utente.fromJson(i)).toList()),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'url': url,
     'titolo': titolo,
     'formato': formato,
     'data': data,
@@ -44,5 +43,6 @@ class Documento{
     'cestino': cestino,
     'proprietario': proprietario,
     'tags': tags,
+    'utenti': condivisi,
   };
 }

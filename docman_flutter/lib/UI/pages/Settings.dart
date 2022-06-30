@@ -22,10 +22,12 @@ class _SettingsState extends State<Settings> {
     super.initState();
     _loading = true;
     Model.sharedInstance.getLoggedUser().then((result) {
-      setState(() {
-        utente = result;
-        _loading = false;
-      });
+      if(mounted) {
+        setState(() {
+          utente = result;
+          _loading = false;
+        });
+      }
     });
   }
 

@@ -1,5 +1,8 @@
 package it.ale.docman.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.ale.docman.entities.*;
 import it.ale.docman.repositories.DocumentoRepository;
 import it.ale.docman.repositories.TagRepository;
@@ -8,6 +11,10 @@ import it.ale.docman.supports.Info;
 import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +28,9 @@ import java.util.List;
 
 @Service
 public class DocumentoService {
+    @Autowired
+    private S3BucketStorageService s3BucketStorageService;
+
     @Autowired
     private DocumentoRepository documentoRepository;
 
@@ -112,7 +122,7 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento carica(String titolo, String descrizione, MultipartFile file) throws UserNotExistsException, DocumentTitleAlreadyExistsException, DocumentUrlAlreadyExistsException, IOException {
+    public Documento carica(String titolo, String descrizione, MultipartFile file) throws UserNotExistsException, DocumentTitleAlreadyExistsException, IOException {
         Utente proprietario = utenteRepository.findByEmail(Utils.getEmail());
         if(proprietario == null)
             throw new UserNotExistsException();
@@ -126,10 +136,6 @@ public class DocumentoService {
         String url = "C:/Users/aless/IdeaProjects/SDCCproject/docman/src/main/resources/uploadedFiles/";
 
         Documento documento = new Documento();
-        if(extension.equals(""))
-            documento.setUrl(url+titolo);
-        else
-            documento.setUrl(url+titolo+"."+extension);
         documento.setTitolo(titolo);
         documento.setFormato(extension);
         documento.setData(LocalDateTime.now());
@@ -139,16 +145,29 @@ public class DocumentoService {
         documento.setCestino(false);
         documento.setProprietario(proprietario);
 
-        if(documentoRepository.existsByUrl(documento.getUrl()))
-            throw new DocumentUrlAlreadyExistsException();
         if(documentoRepository.existsByTitolo(documento.getTitolo()))
             throw new DocumentTitleAlreadyExistsException();
 
-        if(extension.equals(""))
-            file.transferTo(new File(url+titolo));
-        else
-            file.transferTo(new File(url+titolo+"."+extension));
+        s3BucketStorageService.uploadFileToS3(file, titolo);
         return documentoRepository.save(documento);
+    }
+
+    @Transactional
+    public ResponseEntity<ByteArrayResource> scarica(int idDoc) throws IOException {
+        Documento documento = documentoRepository.findById(idDoc);
+        String fileName = documento.getTitolo();
+        String estensione = "";
+        if(!documento.getFormato().isEmpty())
+            estensione = "." + documento.getFormato();
+
+        byte[] data = s3BucketStorageService.downloadFileFromS3(fileName + estensione);
+        ByteArrayResource resource = new ByteArrayResource(data);
+        return ResponseEntity
+                .ok()
+                .contentLength(data.length)
+                .header("Content-type", "application/octet-stream")
+                .header("Content-disposition", "attachment; filename=\"" + fileName + estensione + "\"")
+                .body(resource);
     }
 
     @Transactional
@@ -178,7 +197,7 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento eliminaDefinitivamente(int idDocumento) throws DocumentNotExistsException, DocumentNotDeletableException, DocumentNotOwnedException {
+    public String eliminaDefinitivamente(int idDocumento) throws DocumentNotExistsException, DocumentNotDeletableException, DocumentNotOwnedException {
         if(!documentoRepository.existsById(idDocumento))
             throw new DocumentNotExistsException();
 
@@ -189,8 +208,12 @@ public class DocumentoService {
         if(!documento.isCestino())
             throw new DocumentNotDeletableException();
 
+        String estensione = "";
+        if(!documento.getFormato().isEmpty())
+            estensione = "." + documento.getFormato();
+
         documentoRepository.delete(documento);
-        return documento;
+        return s3BucketStorageService.deleteFileFromS3(documento.getTitolo() + estensione);
     }
 
     @Transactional

@@ -7,6 +7,7 @@ import it.ale.docman.supports.Info;
 import it.ale.docman.supports.authentication.Utils;
 import it.ale.docman.supports.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -66,8 +67,15 @@ public class DocumentoController {
             return new ResponseEntity("Utente inesistente!", HttpStatus.BAD_REQUEST);
         } catch (DocumentTitleAlreadyExistsException e) {
             return new ResponseEntity("Titolo già esistente!", HttpStatus.BAD_REQUEST);
-        } catch (DocumentUrlAlreadyExistsException e) {
-            return new ResponseEntity("Url già esistente!", HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            return new ResponseEntity("Errore sconosciuto!", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping(value = "/scarica")
+    public ResponseEntity<ByteArrayResource> scaricaDocumento(@RequestParam int idDoc) {
+        try {
+            return documentoService.scarica(idDoc);
         } catch (IOException e) {
             return new ResponseEntity("Errore sconosciuto!", HttpStatus.BAD_REQUEST);
         }

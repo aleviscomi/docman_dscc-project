@@ -7,26 +7,37 @@ import '../../model/objects/Documento.dart';
 import '../../model/objects/Utente.dart';
 import 'SharingCenter.dart';
 
-class AutocompleteShareUserField extends StatefulWidget {
+class AutocompleteSearchUserField extends StatefulWidget {
   Documento documento;
+  Function share;
+  Function addFromCondivisible;
 
-  AutocompleteShareUserField(this.documento, {Key key}) : super(key: key);
+  AutocompleteSearchUserField(this.documento, this.share, {Key key}) : super(key: key);
 
   @override
-  State<AutocompleteShareUserField> createState() => _AutocompleteShareUserFieldState();
+  State<AutocompleteSearchUserField> createState() => _AutocompleteSearchUserFieldState();
 }
 
-class _AutocompleteShareUserFieldState extends State<AutocompleteShareUserField> {
+class _AutocompleteSearchUserFieldState extends State<AutocompleteSearchUserField> {
   List<Utente> usersList = [];
   TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
+    widget.addFromCondivisible = (Utente u) {
+      if(mounted) {
+        setState(() {
+          usersList.add(u);
+        });
+      }
+    };
     Model.sharedInstance.getSharedUsers(widget.documento.id).then((result) {
-      setState(() {
-        usersList = result;
-      });
+      if(mounted) {
+        setState(() {
+          usersList = result;
+        });
+      }
     });
   }
 
@@ -43,11 +54,16 @@ class _AutocompleteShareUserFieldState extends State<AutocompleteShareUserField>
             onSelected: (Utente utente) {
               _controller.text = "";
               Model.sharedInstance.shareDocument(widget.documento.id, utente.id).then((result) {
-                if(result) {
-                  Navigator.pop(context);
-                  showDialog(context: context, builder: (context) => SharingCenter(widget.documento));
+                if(!result) {
+                  Navigator.pushReplacementNamed(context, '/');
                 }
               });
+              if(mounted) {
+                setState(() {
+                  widget.share(utente);
+                  usersList.removeWhere((element) => element.id == utente.id);
+                });
+              }
             },
             optionsViewBuilder: (context, Function(Utente) onSelected, options) {
               return Align(

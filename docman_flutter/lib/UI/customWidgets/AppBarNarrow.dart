@@ -23,9 +23,11 @@ class _AppBarNarrowState extends State<AppBarNarrow> {
   void initState() {
     super.initState();
     Model.sharedInstance.getDataFromToken().then((result) {
-      setState(() {
-        email = result["email"];
-      });
+      if(mounted) {
+        setState(() {
+          email = result["email"];
+        });
+      }
     });
   }
 

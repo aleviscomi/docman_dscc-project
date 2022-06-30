@@ -22,19 +22,20 @@ class _InfoDialogState extends State<InfoDialog> {
   TextEditingController _controllerDescrizione = TextEditingController();
   List<String> _initialTags = [];
   ChipTagsInput _chipTagsInput;
+  bool isUpdating = false;
 
   @override
   void initState() {
     super.initState();
     _controllerDescrizione.text = widget.documento.descrizione;
-    Model.sharedInstance.getDocumentTags(widget.documento).then((result) {
+    if(mounted) {
       setState(() {
-        for(Tag t in result) {
+        for(Tag t in widget.documento.tags) {
           _initialTags.add(t.nome);
         }
         _chipTagsInput = ChipTagsInput(mydocs: widget.mydocs, initialTags: _initialTags,);
       });
-    });
+    }
   }
 
   @override
@@ -61,6 +62,9 @@ class _InfoDialogState extends State<InfoDialog> {
                     padding: const EdgeInsets.only(top: 30),
                     child: buildSubmit(),
                   ),
+
+                if(isUpdating)
+                  const LinearProgressIndicator()
               ],
             ),
           )
@@ -130,9 +134,15 @@ class _InfoDialogState extends State<InfoDialog> {
   );
 
   Future<void> _updateInfo() async {
+    if(mounted) {
+      setState(() {
+        isUpdating = true;
+      });
+    }
     Info info = Info(descrizione: _controllerDescrizione.text, tags: _chipTagsInput.controllerTags.getTags);
     Model.sharedInstance.modifyDocumentInfo(info, widget.documento.id).then((result){
       Navigator.pushReplacementNamed(context, '/');
+      isUpdating = false;
     });
   }
 }

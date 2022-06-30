@@ -8,7 +8,7 @@
     "loginString": "Log in to your account!",
     "wrongCredentials": "Wrong Credentials!!!",
 
-    "createAccount": "Crea il tuo account",
+    "createAccount": "Create account!",
     "name": "Nome",
     "surname": "Cognome",
     "repeatPassword": "Ripeti password",
@@ -35,6 +35,7 @@
     "enterTags": "Enter tags...",
     "selectFile": "Select File",
     "uploadError": "Upload error",
+    "downloadError": "Download error",
     "sharingCenter": "Sharing center",
     "shareWith": "Share with...",
     "alreadyShared": "This document has already been shared with",

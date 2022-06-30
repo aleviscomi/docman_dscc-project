@@ -24,9 +24,11 @@ class _AppBarWideState extends State<AppBarWide> {
   void initState() {
     super.initState();
     Model.sharedInstance.getDataFromToken().then((result) {
-      setState(() {
-        email = result["email"];
-      });
+      if(mounted) {
+        setState(() {
+          email = result["email"];
+        });
+      }
     });
     switch(widget.selectedTile) {
       case 1: {

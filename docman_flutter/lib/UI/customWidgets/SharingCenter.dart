@@ -21,15 +21,17 @@ class SharingCenter extends StatefulWidget {
 
 class _SharingCenterState extends State<SharingCenter> {
   List<Utente> giaCondivisi = [];
+  AutocompleteSearchUserField _autocompleteSearchUserField;
 
   @override
   void initState() {
     super.initState();
-    Model.sharedInstance.getAlreadySharedUsers(widget.documento.id).then((result) {
+    if(mounted) {
       setState(() {
-        giaCondivisi = result;
+        giaCondivisi = widget.documento.condivisi;
+        _autocompleteSearchUserField = AutocompleteSearchUserField(widget.documento, share);
       });
-    });
+    }
   }
 
   @override
@@ -47,7 +49,7 @@ class _SharingCenterState extends State<SharingCenter> {
         height: 400,
         child: Column(
           children: [
-            AutocompleteShareUserField(widget.documento),
+            _autocompleteSearchUserField,
             _buildSharedList(),
           ],
         )
@@ -83,11 +85,16 @@ class _SharingCenterState extends State<SharingCenter> {
                 icon: Icon(Icons.person_remove_alt_1_outlined),
                 onPressed: () {
                   Model.sharedInstance.unshareDocument(widget.documento.id, giaCondivisi[index].id).then((result) {
-                    if(result) {
-                      Navigator.pop(context);
-                      showDialog(context: context, builder: (context) => SharingCenter(widget.documento));
+                    if(!result) {
+                      Navigator.pushReplacementNamed(context, '/');
                     }
                   });
+                  if(mounted) {
+                    setState(() {
+                      _autocompleteSearchUserField.addFromCondivisible(giaCondivisi[index]);
+                      giaCondivisi.removeWhere((element) => element.id == giaCondivisi[index].id);
+                    });
+                  }
                 },
               ),
             ),
@@ -97,5 +104,11 @@ class _SharingCenterState extends State<SharingCenter> {
       ),
     ],
   );
+
+  void share(Utente u) {
+    setState(() {
+      giaCondivisi.add(u);
+    });
+  }
 
 }

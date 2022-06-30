@@ -105,17 +105,19 @@ class DataSourceTrashed extends DataTableSource {
   int get selectedRowCount => _selectedCount;
 
   void _restoreDoc(int id) {
+    restoreCallback(-1); //attiva l'indicator
     Model.sharedInstance.restoreDocument(id).then((result) {
       if(result) {
-        restoreCallback(id);
+        restoreCallback(id); //ferma l'indicator
       }
     });
   }
 
   void _permanentlyDeleteDoc(int id) {
+    permanentlyDeleteCallback(-1); //attiva l'indicator
     Model.sharedInstance.permanentlyDeleteDocument(id).then((result) {
       if(result) {
-        permanentlyDeleteCallback(id);
+        permanentlyDeleteCallback(id); //ferma l'indicator
       }
     });
   }

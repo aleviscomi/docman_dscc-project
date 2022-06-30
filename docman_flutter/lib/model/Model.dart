@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 import 'dart:io';
+import 'package:http/http.dart';
 
 import 'package:docman_flutter/model/objects/Documento.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:jwt_decode/jwt_decode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -272,6 +272,39 @@ class Model {
       final streamedResponse = await uploadRequest.send();
       final response = await Response.fromStream(streamedResponse);
       return response;
+    } catch(e) {
+      print(e);
+      return null;
+    }
+  }
+
+  Future<bool> downloadDocument(int idDoc, String filename) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+
+    try {
+      Map<String, dynamic> params = Map();
+      Map<String, String> headers = Map();
+      headers[HttpHeaders.authorizationHeader] = 'bearer ${preferences.getString("token")}';
+      params['idDoc'] = idDoc.toString();
+      Uri uri = Uri.http(Constants.ADDRESS_BACKEND_SERVER, Constants.REQUEST_DOWNLOAD_DOC, params);
+      Response response = await get(uri, headers: headers);
+      if(response.statusCode != 200) {
+        return false;
+      }
+
+      final blob = Blob([response.bodyBytes]);
+      final url = Url.createObjectUrlFromBlob(blob);
+      final anchor = document.createElement('a') as AnchorElement
+        ..href = url
+        ..style.display = 'none'
+        ..download = filename;
+      document.body.children.add(anchor);
+      anchor.click();
+
+      document.body.children.remove(anchor);
+      Url.revokeObjectUrl(url);
+
+      return true;
     } catch(e) {
       print(e);
       return null;

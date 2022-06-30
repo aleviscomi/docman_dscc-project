@@ -25,6 +25,7 @@ class _UploadDialogState extends State<UploadDialog> {
   String _filenameUploaded = "";
   PlatformFile _fileUploaded;
   bool _enabledUpload = false;
+  bool isUploading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +47,9 @@ class _UploadDialogState extends State<UploadDialog> {
               buildTitle(),
               buildDescription(),
               buildAddTags(),
-              buildSubmit()
+              buildSubmit(),
+              if(isUploading)
+                const LinearProgressIndicator()
             ],
           ),
         )
@@ -212,6 +215,9 @@ class _UploadDialogState extends State<UploadDialog> {
   );
 
   Future<void> _uploadDoc() async {
+    setState(() {
+      isUploading = true;
+    });
     Response result = await Model.sharedInstance.uploadDocument(_controllerTitolo.text, _controllerDescrizione.text, _fileUploaded);
     if (result.statusCode == 200) {
       List<String> tags = _chipTagsInput.controllerTags.getTags;
@@ -229,6 +235,7 @@ class _UploadDialogState extends State<UploadDialog> {
       Navigator.pop(context);
       _showError();
     }
+    isUploading=false;
   }
 
   void _showError() {

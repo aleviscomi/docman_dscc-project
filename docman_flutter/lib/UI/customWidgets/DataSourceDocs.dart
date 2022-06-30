@@ -10,9 +10,10 @@ import 'SharingCenter.dart';
 
 class DataSourceDocs extends DataTableSource {
   Function deleteCallback;
+  Function downloadCallback;
   List<Documento> docs;
 
-  DataSourceDocs(this.context, this.docs, this.deleteCallback) {
+  DataSourceDocs(this.context, this.docs, this.deleteCallback, this.downloadCallback) {
     _rows = <_Row>[
       for(Documento d in docs)
         _Row(
@@ -58,7 +59,10 @@ class DataSourceDocs extends DataTableSource {
               offset: const Offset(0, 20),
               onSelected: (result) {
                 switch(result) {
-                  case 0: print(AppLocalizations.of(context).download); break;
+                  case 0: {
+                    _downloadDoc(row.documento);
+                    break;
+                  }
                   case 1: {
                     _openInfoDialog(row.documento);
                     break;
@@ -127,10 +131,25 @@ class DataSourceDocs extends DataTableSource {
   @override
   int get selectedRowCount => _selectedCount;
 
+  void _downloadDoc(Documento doc) {
+    downloadCallback(true);
+    String filename = doc.titolo;
+    if(doc.formato.isNotEmpty) {
+      filename += ".${doc.formato}";
+    }
+    Model.sharedInstance.downloadDocument(doc.id, filename).then((result) {
+      downloadCallback(false);
+      if(!result) {
+        _showError();
+      }
+    });
+  }
+
   void _deleteDoc(int id) {
+    deleteCallback(-1); //indica di far partire l'indicator di eliminazione
     Model.sharedInstance.deleteDocument(id).then((result) {
       if(result) {
-        deleteCallback(id);
+        deleteCallback(id); //stoppa l'indicator
       }
     });
   }
@@ -141,6 +160,39 @@ class DataSourceDocs extends DataTableSource {
 
   void _openSharingCenter(Documento documento) {
     showDialog(context: context, builder: (context) => SharingCenter(documento));
+  }
+
+  void _showError() {
+    showDialog(
+        context: context,
+        builder: (context)
+        {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 30,),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+                  child: Text(AppLocalizations.of(context).downloadError),
+                ),
+              ],
+            ),
+            actions: [
+              MaterialButton(
+                height: 40,
+                minWidth: 100,
+                onPressed: () { Navigator.pop(context); },
+                elevation: 6.0,
+                color: Theme.of(context).primaryColor,
+                child: Text('OK', style: TextStyle(color: Colors.white, fontSize: 16)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ],
+          );
+        }
+    );
   }
 
   Icon setIcon(String formato) {

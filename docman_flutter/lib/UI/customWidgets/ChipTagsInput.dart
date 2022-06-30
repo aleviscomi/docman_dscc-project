@@ -5,7 +5,7 @@ import 'package:textfield_tags/textfield_tags.dart';
 
 class ChipTagsInput extends StatefulWidget {
   bool mydocs; //per i miei documenti (true) deve essere abilitato l'input, altrimenti per i condivisi (false) no
-  TextfieldTagsController controllerTags;
+  TextfieldTagsController controllerTags = TextfieldTagsController();
   List<String> initialTags = [];
 
   ChipTagsInput({Key key, this.initialTags, this.mydocs}) : super(key: key);
@@ -15,16 +15,17 @@ class ChipTagsInput extends StatefulWidget {
 }
 
 class _ChipTagsInputState extends State<ChipTagsInput> {
-  List<Tag> _suggestTags;
+  List<Tag> _suggestTags = [];
 
   @override
   void initState() {
     super.initState();
-    widget.controllerTags = TextfieldTagsController();
     Model.sharedInstance.getTagsByUser().then((result) {
-      setState(() {
-        _suggestTags = result;
-      });
+      if(mounted) {
+        setState(() {
+          _suggestTags = result;
+        });
+      }
     });
   }
 

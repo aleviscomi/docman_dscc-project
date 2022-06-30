@@ -34,6 +34,9 @@ class _MyDocsState extends State<MyDocs> {
   List<Tag> selectedTags = [];
   List<String> selectedTypes = [];
 
+  bool isDownloading = false;
+  bool isDeleting = false;
+
   int _rowPerPage = 5;
   final _keyPaginatedTable = GlobalKey<PaginatedDataTableState>();
 
@@ -42,28 +45,36 @@ class _MyDocsState extends State<MyDocs> {
     super.initState();
     iconFilter = Icon(Icons.tune_rounded);
     Model.sharedInstance.getDataFromToken().then((result) {
-      setState(() {
-        nome = result["given_name"];
-      });
+      if(mounted) {
+        setState(() {
+          nome = result["given_name"];
+        });
+      }
     });
 
     Model.sharedInstance.getMyDocuments().then((result) {
-      setState(() {
-        _docs = result;
-        docsUploaded = true;
-      });
+      if(mounted) {
+        setState(() {
+          _docs = result;
+          docsUploaded = true;
+        });
+      }
     });
 
 
     Model.sharedInstance.getTagsByUser().then((result) {
-      setState(() {
-        tagsList = result;
-      });
+      if(mounted) {
+        setState(() {
+          tagsList = result;
+        });
+      }
     });
     Model.sharedInstance.getTypesByUser().then((result) {
-      setState(() {
-        typesList = result;
-      });
+      if(mounted) {
+        setState(() {
+          typesList = result;
+        });
+      }
     });
   }
 
@@ -105,6 +116,8 @@ class _MyDocsState extends State<MyDocs> {
               ),
             ],
           ),
+          if(isDownloading || isDeleting)
+            const LinearProgressIndicator(),
           Container(
             width: MediaQuery.of(context).size.width,
             child: !docsUploaded ? Center(child: SizedBox(child: CircularProgressIndicator(), height: 100, width: 100,)) :
@@ -166,12 +179,12 @@ class _MyDocsState extends State<MyDocs> {
                 ),
               ],
               source: (_searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty) && (selectedTypes.isNotEmpty || selectedTags.isNotEmpty) ?
-              DataSourceDocs(context, _searchedDocs.toSet().intersection(_filteredDocs.toSet()).toList(), delete) :
+              DataSourceDocs(context, _searchedDocs.toSet().intersection(_filteredDocs.toSet()).toList(), delete, download) :
               _searchedDocs.isNotEmpty || _controllerSearch.text.isNotEmpty ?
-              DataSourceDocs(context, _searchedDocs, delete) :
+              DataSourceDocs(context, _searchedDocs, delete, download) :
               selectedTypes.isNotEmpty || selectedTags.isNotEmpty ?
-              DataSourceDocs(context, _filteredDocs, delete) :
-              DataSourceDocs(context, _docs, delete),
+              DataSourceDocs(context, _filteredDocs, delete, download) :
+              DataSourceDocs(context, _docs, delete, download),
             ),
           ),
         ],
@@ -179,11 +192,26 @@ class _MyDocsState extends State<MyDocs> {
     );
   }
 
+  void download(bool start) {
+    if(mounted) {
+      setState(() {
+        isDownloading = start;
+      });
+    }
+  }
+
   void delete(int idDoc) {
-    setState(() {
-      _docs.removeWhere((documento) => idDoc == documento.id);
-      _filteredDocs.removeWhere((documento) => idDoc == documento.id);
-    });
+    if(mounted) {
+      setState(() {
+        if(idDoc == -1) {
+          isDeleting = true;
+        } else {
+          _docs.removeWhere((documento) => idDoc == documento.id);
+          _filteredDocs.removeWhere((documento) => idDoc == documento.id);
+          isDeleting = false;
+        }
+      });
+    }
   }
 
   void selectTag(Tag tag) {

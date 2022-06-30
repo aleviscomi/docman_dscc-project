@@ -35,6 +35,7 @@ class Constants {
   static const String REQUEST_SHARED_WITH_ME_DOCS = "/documenti/condivisiconme";
   static const String REQUEST_MY_TRASHED_DOCS = "/documenti/cestino";
   static const String REQUEST_UPLOAD_DOC = "/documenti/carica";
+  static const String REQUEST_DOWNLOAD_DOC = "/documenti/scarica";
   static const String REQUEST_DELETE_DOC = "/documenti/elimina";
   static const String REQUEST_PERMANENTLY_DELETE_DOC = "/documenti/eliminadefinitivamente";
   static const String REQUEST_RESTORE_DOC = "/documenti/ripristina";

@@ -8,7 +8,7 @@
     "loginString": "Accedi al tuo account!",
     "wrongCredentials": "Credenziali errate!!!",
 
-    "createAccount": "Create account",
+    "createAccount": "Crea il tuo account!",
     "name": "Name",
     "surname": "Surname",
     "repeatPassword": "Repeat password",
@@ -35,6 +35,7 @@
     "enterTags": "Aggiungi tags...",
     "selectFile": "Seleziona File",
     "uploadError": "Errore nel caricamento del file",
+    "downloadError": "Errore nel download del file",
     "sharingCenter": "Centro di condivisione",
     "shareWith": "Condividi con...",
     "alreadyShared": "Questo documento è già stato condiviso con",
